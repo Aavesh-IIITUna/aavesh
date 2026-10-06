@@ -1,0 +1,24 @@
+{
+  "name": "aavesh",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AAVESH // IIIT UNA — Electronics & Signal Intelligence Society (MERN)",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "build": "npm run build --workspace client",
+    "start": "npm run start --workspace server",
+    "lint": "npm run lint --workspace client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
