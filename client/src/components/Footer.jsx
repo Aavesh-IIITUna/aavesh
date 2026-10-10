@@ -1,6 +1,6 @@
 import { useClocks } from '../hooks/useClocks.js';
 
-export default function Footer({ society, tracks }) {
+export default function Footer({ society, tracks, onReplayIntro }) {
   const { utc, ist } = useClocks(true);
   const socials = society?.socials ?? {};
   const socialEntries = [
@@ -110,6 +110,18 @@ export default function Footer({ society, tracks }) {
       <div className="flex w-full flex-col items-center justify-between gap-4 border-t border-outline-variant pt-6 font-label-xs text-label-xs text-on-surface-variant sm:flex-row">
         <div>&copy; 2025 AAVESH IIIT UNA. ALL RIGHTS RESERVED. HARDWARE &amp; SIGNAL INTELLIGENCE DIVISION.</div>
         <div className="flex items-center gap-4 font-mono text-outline">
+          {onReplayIntro && (
+            <>
+              <button
+                type="button"
+                onClick={onReplayIntro}
+                className="hover:text-primary transition-colors cursor-pointer uppercase tracking-wider"
+              >
+                [REPLAY_INTRO]
+              </button>
+              <span aria-hidden="true">&bull;</span>
+            </>
+          )}
           <span>{utc}</span>
           <span aria-hidden="true">&bull;</span>
           <span>{ist}</span>
