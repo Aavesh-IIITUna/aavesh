@@ -16,14 +16,13 @@ import {
 } from "lucide-react"
 import { useEffect, useLayoutEffect, useState } from "react"
 import BrandMark from "./components/BrandMark"
-import CinematicIntro from "./components/CinematicIntro"
-import Navbar from "./components/Navbar"
-import ScrollHUD from "./components/ScrollHUD"
-import TechCursor from "./components/TechCursor"
+import DefaultLayout from "./layout"
+import DepthCarousel from "./components/DepthCarousel"
+import InfiniteMenu from "./components/InfiniteMenu"
 import { useSociety } from "./hooks/useSociety"
 import { api, ApiRequestError } from "./lib/api"
-import Hero from "./sections/Hero"
-import ScrollShowcase from "./sections/ScrollShowcase"
+import Hero from "./pages/Hero"
+import ScrollShowcase from "./pages/ScrollShowcase"
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -95,15 +94,6 @@ function ImageWithCredit({ alt, className = "", credit, src }) {
   )
 }
 
-const navigation = [
-  ["About", "#about"],
-  ["Domains", "#domains"],
-  ["Projects", "#projects"],
-  ["Events", "#events"],
-  ["Gallery", "#gallery"],
-  ["Team", "#team"],
-  ["Sponsors", "#sponsors"],
-]
 
 const fallbackDomainIcons = {
   "01": CircuitBoard,
@@ -178,7 +168,7 @@ function About({ society }) {
           <SectionLabel index="02">About</SectionLabel>
           <span className="eyebrow">We are</span>
           <Heading className="about-title" id="about-title">
-            <BrandMark />
+            <BrandMark className="h-7 w-auto md:h-9 inline-block align-middle mr-2" />
             {society?.shortName || "AAVESH"}
           </Heading>
           <p className="about-lead">
@@ -444,7 +434,7 @@ function Gallery() {
       id="gallery"
     >
       <div className="container">
-        <div className="section-heading-row">
+        <div className="section-heading-row mb-6">
           <SectionIntro
             description="Moments from our test benches, fabrication workshops, and competition deployments."
             index="06"
@@ -463,21 +453,26 @@ function Gallery() {
           </div>
         </div>
 
-        <div className="gallery-grid">
-          {gallery.map((item, index) => (
-            <article
-              className={`gallery-card gallery-card--${index + 1}`}
-              data-reveal
-              key={item.title}
-            >
-              <img alt={item.alt} loading="lazy" src={item.image} />
-              <div className="gallery-card__overlay">
-                <span>{item.label}</span>
-                <Heading as="h3">{item.title}</Heading>
-                <small>{item.credit}</small>
-              </div>
-            </article>
-          ))}
+        {/* 3D DepthCarousel from React Bits */}
+        <div style={{ height: "460px", position: "relative", width: "100%" }} data-reveal>
+          <DepthCarousel
+            autoplay={true}
+            autoplayDelay={3000}
+            blur={6}
+            cardHeight={380}
+            cardWidth={320}
+            depth={220}
+            falloff={0.2}
+            items={gallery}
+            loop={true}
+            perspective={1400}
+            showControls={true}
+            showIndicators={true}
+            spread={90}
+            tilt={22}
+            tiltDirection="right"
+            visibleCards={4}
+          />
         </div>
       </div>
     </section>
@@ -485,32 +480,34 @@ function Gallery() {
 }
 
 function Team({ members }) {
-  const teamDivisionDefaults = [
-    {
-      icon: Users,
-      title: "Faculty Mentorship",
-      role: "Guidance & Institutional Direction",
-      code: "FAC.01",
-    },
-    {
-      icon: Cpu,
-      title: "VLSI & Hardware Core",
-      role: "RTL, FPGA, and Custom PCB Teams",
-      code: "CORE.02",
-    },
-    {
-      icon: Radio,
-      title: "RF & Signal Intelligence",
-      role: "Spectrum sensing & antenna design",
-      code: "SIG.03",
-    },
-    {
-      icon: Code2,
-      title: "Software & Autonomous Systems",
-      role: "ROS, Edge AI, and sensor pipelines",
-      code: "AUTO.04",
-    },
-  ]
+  const teamMenuItems = members && members.length > 0
+    ? members.map((m, i) => ({
+        image: m.image || (i % 2 === 0 ? "/images/circuit-board.jpg" : "/images/soldering.jpg"),
+        title: m.name,
+        description: `${m.role} · ${m.track || 'Core Division'}`,
+      }))
+    : [
+        {
+          image: "/images/circuit-board.jpg",
+          title: "Faculty Mentorship",
+          description: "Guidance & Institutional Direction · IIIT Una",
+        },
+        {
+          image: "/images/soldering.jpg",
+          title: "VLSI & Hardware Core",
+          description: "RTL, FPGA, and Custom PCB Architecture Teams",
+        },
+        {
+          image: "/images/robotics.jpg",
+          title: "RF & Signal Intelligence",
+          description: "Spectrum sensing, antenna & RF front-end design",
+        },
+        {
+          image: "/images/workshop.jpg",
+          title: "Software & Autonomous Systems",
+          description: "ROS 2, Edge AI, sensor fusion & RTOS pipelines",
+        },
+      ]
 
   return (
     <section
@@ -518,57 +515,45 @@ function Team({ members }) {
       className="section section--ruled"
       id="team"
     >
-      <div className="container split-section">
-        <SectionIntro
-          description="A student-led technical collective supported by faculty mentorship and driven by passionate builders."
-          index="07"
-          label="Node Registry & Team"
-          title={
-            <>
-              Builders behind
-              <br />
-              <span className="accent-text">AAVESH.</span>
-            </>
-          }
-        />
-
-        <div className="team-area">
-          {members && members.length > 0 && (
-            <div style={{ marginBottom: "2rem" }} data-reveal>
-              <div className="content-notice">
-                <ContentBadge variant="live">Executive Leadership Council</ContentBadge>
-                <p>Official student council maintainers serving the electronics society.</p>
-              </div>
-              <div className="team-grid">
-                {members.map((member) => (
-                  <article className="team-card" data-reveal key={member.name}>
-                    <div className="team-card__portrait">
-                      <Users aria-hidden="true" />
-                      <span>NODE</span>
-                    </div>
-                    <Heading as="h3">{member.name}</Heading>
-                    <p style={{ color: "var(--cyan)", fontWeight: 500 }}>{member.role}</p>
-                    <small style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "var(--mono)" }}>
-                      {member.track || "Core Division"}
-                    </small>
-                  </article>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="team-grid">
-            {teamDivisionDefaults.map(({ code, icon: Icon, role, title }) => (
-              <article className="team-card" data-reveal key={title}>
-                <div className="team-card__portrait">
-                  <Icon aria-hidden="true" />
-                  <span>{code}</span>
-                </div>
-                <Heading as="h3">{title}</Heading>
-                <p>{role}</p>
-              </article>
-            ))}
+      <div className="container">
+        <div className="section-heading-row mb-6">
+          <SectionIntro
+            description="A student-led technical collective supported by faculty mentorship and driven by passionate builders."
+            index="07"
+            label="Node Registry & Team"
+            title={
+              <>
+                Builders behind
+                <br />
+                <span className="accent-text">AAVESH.</span>
+              </>
+            }
+          />
+          <div className="content-notice content-notice--compact" data-reveal>
+            <ContentBadge variant="live">Executive Leadership</ContentBadge>
+            <p>Drag or click to spin through members of the club.</p>
           </div>
+        </div>
+
+        {/* 3D InfiniteMenu for Members of the Club from React Bits */}
+        <div style={{ height: "520px", position: "relative", width: "100%", borderRadius: "24px", overflow: "hidden" }} data-reveal>
+          <InfiniteMenu
+            accentColor="#00f0ff"
+            autoplay={3.5}
+            count={80}
+            dim={0.2}
+            grayscale={false}
+            inertia={0.65}
+            intro={true}
+            items={teamMenuItems}
+            pullBack={1}
+            roundness={0.25}
+            showInfo={true}
+            stretch={0.6}
+            theme="dark"
+            tileSize={0.65}
+            zoom={1.6}
+          />
         </div>
       </div>
     </section>
@@ -775,47 +760,6 @@ function Contact({ society }) {
   )
 }
 
-function Footer({ onReplayIntro, society }) {
-  return (
-    <footer className="site-footer">
-      <div className="container footer-main">
-        <div className="footer-brand">
-          <BrandMark />
-          <div>
-            <strong>{society?.shortName || "AAVESH"}</strong>
-            <span>{society?.tagline || "Electronics & Technology Society"}</span>
-            <span>{society?.institute || "IIIT Una"}</span>
-          </div>
-        </div>
-        <nav aria-label="Footer navigation" className="footer-nav">
-          {navigation.map(([label, href]) => (
-            <Link href={href} key={href}>
-              {label}
-            </Link>
-          ))}
-          <Link href="#contact">Contact</Link>
-          {onReplayIntro && (
-            <button
-              type="button"
-              onClick={onReplayIntro}
-              className="text-xs uppercase tracking-wider text-[#FF1238] hover:text-white transition-colors cursor-pointer bg-transparent border-0 p-0 text-left font-mono"
-            >
-              [Replay Intro]
-            </button>
-          )}
-        </nav>
-        <div className="footer-social" aria-label="Social connections">
-          <span>Official Lab Frequency</span>
-          <p>{society?.email || "aavesh@iiitu.ac.in"}</p>
-        </div>
-      </div>
-      <div className="container footer-bottom">
-        <span>AAVESH // Indian Institute of Information Technology Una</span>
-        <span>{society?.accreditation || "An Institute of National Importance under Ministry of Education, Govt. of India"}</span>
-      </div>
-    </footer>
-  )
-}
 
 export default function App() {
   const { society, tracks, projects, members, live } = useSociety()
@@ -833,8 +777,10 @@ export default function App() {
     setReverseFlow((prev) => !prev)
   }
 
-  // Interactive 3D Tilt & Radial Spotlight for cards
+  // Interactive 3D Tilt & Radial Spotlight for cards (desktop only)
   useEffect(() => {
+    if (window.matchMedia("(pointer: coarse)").matches) return
+
     const handleCardMove = (e) => {
       const card = e.target?.closest(
         ".domain-card, .project-card, .event-feature, .gallery-card, .team-card",
@@ -913,37 +859,28 @@ export default function App() {
   }, [])
 
   return (
-    <div className={`app-wrapper ${reverseFlow ? "is-polarity-reversed" : ""}`}>
-      <CinematicIntro
-        key={introKey}
-        forcePlay={forceIntro}
-        onComplete={() => setForceIntro(false)}
-      />
-      <Link className="skip-link" href="#main">
-        Skip to content
-      </Link>
-      <Navbar />
-      <main id="main">
-        <Hero
-          onToggleReverseFlow={handleToggleReverseFlow}
-          reverseFlow={reverseFlow}
-        />
-        <ScrollShowcase />
-        <About society={society} />
-        <Domains tracks={tracks} />
-        <Projects live={live} projects={projects} />
-        <Events />
-        <Gallery />
-        <Team members={members} />
-        <Sponsors />
-        <Contact society={society} />
-      </main>
-      <Footer onReplayIntro={handleReplayIntro} society={society} />
-      <TechCursor />
-      <ScrollHUD
+    <DefaultLayout
+      forceIntro={forceIntro}
+      introKey={introKey}
+      onIntroComplete={() => setForceIntro(false)}
+      onReplayIntro={handleReplayIntro}
+      onToggleReverseFlow={handleToggleReverseFlow}
+      reverseFlow={reverseFlow}
+      society={society}
+    >
+      <Hero
         onToggleReverseFlow={handleToggleReverseFlow}
         reverseFlow={reverseFlow}
       />
-    </div>
+      <ScrollShowcase />
+      <About society={society} />
+      <Domains tracks={tracks} />
+      <Projects live={live} projects={projects} />
+      <Events />
+      <Gallery />
+      <Team members={members} />
+      <Sponsors />
+      <Contact society={society} />
+    </DefaultLayout>
   )
 }

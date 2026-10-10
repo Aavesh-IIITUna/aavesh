@@ -167,14 +167,11 @@ export default function Hero({ society }) {
   };
 
   const handleChipClick = () => {
-    soundFX.playSurge();
-    setBurstRipple(Date.now());
-    setPowerSurge((prev) => !prev);
+    // Silent & clean: no component or sound appears when clicking the mesh
   };
 
   const handleBoardClick = () => {
-    soundFX.playClick();
-    setBurstRipple(Date.now());
+    // Silent & clean: no component or sound appears when clicking the mesh
   };
 
   return (

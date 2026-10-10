@@ -160,9 +160,7 @@ export default function Hero({ reverseFlow = false, onToggleReverseFlow }) {
   }
 
   const handleChipClick = () => {
-    soundFX.playSurge()
-    setBurstRipple(Date.now())
-    setPowerSurge((prev) => !prev)
+    // Silent & clean: no component or sound appears when clicking the mesh
   }
 
   return (

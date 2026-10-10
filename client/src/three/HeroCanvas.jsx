@@ -13,52 +13,51 @@ export default function HeroCanvas({
   const engineRef = useRef(null)
   const [telemetry, setTelemetry] = useState(null)
   const [activeTheme, setActiveTheme] = useState(THEME_CONFIGS[0])
-  const [showHint, setShowHint] = useState(true)
 
-  // Initialize 3D PCB Engine
+  const callbacksRef = useRef({ onChipClick, onChipHover, onThemeChange })
+  useEffect(() => {
+    callbacksRef.current = { onChipClick, onChipHover, onThemeChange }
+  })
+
+  // Initialize 3D PCB Engine responsively across mobile, tablet, and desktop
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
     const engine = new PCBSceneEngine(container, {
-      autoRotate: autoRotate,
+      autoRotate,
       onHoverChange: (info, clientX, clientY) => {
         if (info) {
           setTelemetry({ ...info, x: clientX, y: clientY })
-          if (onChipHover) onChipHover(true)
+          callbacksRef.current.onChipHover?.(true)
         } else {
           setTelemetry(null)
-          if (onChipHover) onChipHover(false)
+          callbacksRef.current.onChipHover?.(false)
         }
       },
       onThemeChange: (theme) => {
         setActiveTheme(theme)
-        if (onThemeChange) onThemeChange(theme)
+        callbacksRef.current.onThemeChange?.(theme)
       },
       onChipClick: () => {
-        if (onChipClick) onChipClick()
+        callbacksRef.current.onChipClick?.()
       },
     })
 
     engineRef.current = engine
 
-    // Hide hint after first interaction
-    const handleFirstTouch = () => {
-      setShowHint(false)
-    }
-    container.addEventListener("pointerdown", handleFirstTouch, { once: true })
-
     return () => {
-      container.removeEventListener("pointerdown", handleFirstTouch)
-      engine.dispose()
-      engineRef.current = null
+      if (engineRef.current) {
+        engineRef.current.dispose()
+        engineRef.current = null
+      }
     }
   }, [])
 
   // Sync autoRotate prop
   useEffect(() => {
     if (engineRef.current && engineRef.current.controls) {
-      engineRef.current.controls.autoRotate = autoRotate
+      engineRef.current.options.autoRotate = autoRotate
     }
   }, [autoRotate])
 
@@ -82,29 +81,30 @@ export default function HeroCanvas({
         cursor: "grab",
       }}
     >
-      {/* Telemetry Tooltip when hovering over components or AAVESH logo */}
+      {/* Telemetry Tooltip when hovering over components */}
       {telemetry && (
         <div
           className="pcb-telemetry-tooltip glass-panel"
           style={{
             position: "fixed",
             left: Math.min(
-              window.innerWidth - 300,
-              Math.max(20, telemetry.x + 18),
+              window.innerWidth - 280,
+              Math.max(16, (telemetry.x || 100) + 16),
             ),
             top: Math.min(
-              window.innerHeight - 150,
-              Math.max(20, telemetry.y - 12),
+              window.innerHeight - 140,
+              Math.max(16, (telemetry.y || 100) - 10),
             ),
             zIndex: 100,
             pointerEvents: "none",
             padding: "0.65rem 0.95rem",
-            background: "rgba(3, 7, 14, 0.88)",
-            border: "1px solid rgba(56, 189, 248, 0.35)",
+            background: "rgba(3, 7, 14, 0.92)",
+            border: "1px solid rgba(0, 240, 255, 0.35)",
             borderRadius: "8px",
             boxShadow:
-              "0 8px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.2)",
+              "0 8px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(0, 240, 255, 0.2)",
             backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
             maxWidth: "280px",
             animation: "fadeIn 0.15s ease-out",
           }}
@@ -116,8 +116,8 @@ export default function HeroCanvas({
               gap: "0.45rem",
               fontSize: "0.76rem",
               fontWeight: 700,
-              fontFamily: "'Aavesh', 'AAVESH Display', sans-serif",
-              color: "#38bdf8",
+              fontFamily: "var(--display, 'AAVESH Display', sans-serif)",
+              color: "#00f0ff",
               marginBottom: "0.25rem",
             }}
           >
@@ -127,7 +127,7 @@ export default function HeroCanvas({
                 height: "6px",
                 borderRadius: "50%",
                 background: "#00f0ff",
-                boxShadow: "0 0 6px #00f0ff",
+                boxShadow: "0 0 8px #00f0ff",
                 display: "inline-block",
               }}
             />
@@ -135,10 +135,11 @@ export default function HeroCanvas({
           </div>
           <p
             style={{
-              fontSize: "0.68rem",
+              fontSize: "0.7rem",
               color: "#cbd5e1",
               margin: "0 0 0.35rem 0",
               lineHeight: 1.35,
+              fontFamily: "var(--body, 'Aavesh', sans-serif)",
             }}
           >
             {telemetry.desc}
@@ -147,15 +148,15 @@ export default function HeroCanvas({
             style={{
               display: "flex",
               justifyContent: "space-between",
-              fontSize: "0.62rem",
-              fontFamily: "'Aavesh', 'AAVESH Display', sans-serif",
+              fontSize: "0.65rem",
+              fontFamily: "var(--mono, 'Aavesh', monospace)",
               color: "#94a3b8",
               borderTop: "1px solid rgba(255, 255, 255, 0.08)",
               paddingTop: "0.3rem",
             }}
           >
             <span>{telemetry.voltage || "3.3V"}</span>
-            <span>{telemetry.freq || "ACTIVE"}</span>
+            <span style={{ color: "#00f0ff" }}>{telemetry.freq || "ACTIVE"}</span>
           </div>
         </div>
       )}
@@ -170,14 +171,15 @@ export default function HeroCanvas({
           zIndex: 20,
           display: "flex",
           alignItems: "center",
-          gap: "0.6rem",
-          padding: "0.45rem 0.85rem",
-          background: "rgba(2, 6, 12, 0.72)",
+          gap: "0.55rem",
+          padding: "0.4rem 0.85rem",
+          background: "rgba(2, 6, 12, 0.78)",
           border: "1px solid rgba(255, 255, 255, 0.12)",
           borderRadius: "999px",
-          backdropFilter: "blur(10px)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
           fontSize: "0.68rem",
-          fontFamily: "'Aavesh', 'AAVESH Display', sans-serif",
+          fontFamily: "var(--mono, 'Aavesh', monospace)",
           color: "#94a3b8",
           userSelect: "none",
           transition: "all 0.3s ease",
@@ -188,8 +190,8 @@ export default function HeroCanvas({
             width: "8px",
             height: "8px",
             borderRadius: "50%",
-            background: `#${activeTheme.hex.toString(16).padStart(6, "0")}`,
-            boxShadow: `0 0 10px #${activeTheme.hex.toString(16).padStart(6, "0")}`,
+            background: `#${(activeTheme?.hex ?? 0x00f0ff).toString(16).padStart(6, "0")}`,
+            boxShadow: `0 0 10px #${(activeTheme?.hex ?? 0x00f0ff).toString(16).padStart(6, "0")}`,
             display: "inline-block",
           }}
         />
@@ -197,36 +199,14 @@ export default function HeroCanvas({
           RESONANCE:{" "}
           <strong
             style={{
-              color: `#${activeTheme.hex.toString(16).padStart(6, "0")}`,
+              color: `#${(activeTheme?.hex ?? 0x00f0ff).toString(16).padStart(6, "0")}`,
               fontWeight: 600,
             }}
           >
-            {activeTheme.name}
-          </strong>{" "}
-          ({activeTheme.speed}x)
+            {activeTheme?.name || "AAVESH Cyan"}
+          </strong>
         </span>
       </div>
-
-      {/* Interactive Micro-hint */}
-      {showHint && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "3.2rem",
-            right: "1.5rem",
-            zIndex: 19,
-            fontSize: "0.62rem",
-            fontFamily: "'Aavesh', 'AAVESH Display', sans-serif",
-            color: "rgba(148, 163, 184, 0.7)",
-            pointerEvents: "none",
-            display: "none",
-          }}
-          className="desktop-pcb-hint"
-        >
-          💡 Click AAVESH logo to cycle theme • Drag to rotate • Scroll to
-          navigate page
-        </div>
-      )}
     </div>
   )
 }

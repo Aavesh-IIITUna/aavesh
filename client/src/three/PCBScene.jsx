@@ -148,7 +148,7 @@ function createPCBSilkscreenTexture() {
     ctx.fillText('Pb-FREE · RoHS', 140, 1408);
 
     ctx.strokeRect(360, 1370, 180, 60);
-    ctx.fillText('ESD SAFE ⚡', 380, 1408);
+    ctx.fillText('ESD SAFE', 380, 1408);
   }
 
   const texture = new THREE.CanvasTexture(canvas);

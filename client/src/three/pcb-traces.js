@@ -574,38 +574,66 @@ export function getPCBComponents() {
   return components
 }
 
-// 7. 3D Mesh Builders for Authentic SMD Components
+// 7. Optimized 3D Mesh Builders for SMD Components with Shared Geometries & Materials
+const sharedResistorBodyGeom = new THREE.BoxGeometry(0.24, 0.08, 0.13)
+const sharedResistorEndGeom = new THREE.BoxGeometry(0.05, 0.09, 0.135)
+const sharedResistorPadGeom = new THREE.BoxGeometry(0.09, 0.016, 0.16)
+
+const sharedCapBodyGeom = new THREE.BoxGeometry(0.26, 0.13, 0.15)
+const sharedCapEndGeom = new THREE.BoxGeometry(0.06, 0.14, 0.155)
+const sharedCapPadGeom = new THREE.BoxGeometry(0.1, 0.016, 0.18)
+
+const sharedDiodeBodyGeom = new THREE.BoxGeometry(0.32, 0.12, 0.16)
+const sharedDiodeBandGeom = new THREE.BoxGeometry(0.05, 0.125, 0.165)
+const sharedDiodeLeadGeom = new THREE.BoxGeometry(0.08, 0.04, 0.12)
+const sharedDiodePadGeom = new THREE.BoxGeometry(0.1, 0.016, 0.18)
+
+const sharedResistorMat = new THREE.MeshStandardMaterial({
+  color: 0x07090d,
+  roughness: 0.35,
+  metalness: 0.15,
+})
+const sharedCapMat = new THREE.MeshStandardMaterial({
+  color: 0x936138,
+  roughness: 0.45,
+  metalness: 0.1,
+})
+const sharedDiodeMat = new THREE.MeshStandardMaterial({
+  color: 0x090d14,
+  roughness: 0.35,
+  metalness: 0.15,
+})
+const sharedBandMat = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  roughness: 0.3,
+  metalness: 0.05,
+})
+const sharedSilverMat = new THREE.MeshStandardMaterial({
+  color: 0xe2e8f0,
+  roughness: 0.18,
+  metalness: 0.9,
+})
+const sharedGoldPadMat = new THREE.MeshStandardMaterial({
+  color: 0xfacc15,
+  roughness: 0.22,
+  metalness: 0.88,
+})
+
 export function createSMDResistorMesh() {
   const g = new THREE.Group()
-  const bodyMat = new THREE.MeshStandardMaterial({
-    color: 0x07090d,
-    roughness: 0.25,
-    metalness: 0.2,
-  })
-  const silverMat = new THREE.MeshStandardMaterial({
-    color: 0xe2e8f0,
-    roughness: 0.12,
-    metalness: 0.98,
-  })
-  const padMat = new THREE.MeshStandardMaterial({
-    color: 0xfacc15,
-    roughness: 0.16,
-    metalness: 0.95,
-  })
-
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.13), bodyMat)
+  const body = new THREE.Mesh(sharedResistorBodyGeom, sharedResistorMat)
   body.position.y = 0.04
   g.add(body)
 
-  const e1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.09, 0.135), silverMat)
+  const e1 = new THREE.Mesh(sharedResistorEndGeom, sharedSilverMat)
   e1.position.set(-0.11, 0.04, 0)
-  const e2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.09, 0.135), silverMat)
+  const e2 = new THREE.Mesh(sharedResistorEndGeom, sharedSilverMat)
   e2.position.set(0.11, 0.04, 0)
   g.add(e1, e2)
 
-  const pad1 = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.016, 0.16), padMat)
+  const pad1 = new THREE.Mesh(sharedResistorPadGeom, sharedGoldPadMat)
   pad1.position.set(-0.12, 0.008, 0)
-  const pad2 = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.016, 0.16), padMat)
+  const pad2 = new THREE.Mesh(sharedResistorPadGeom, sharedGoldPadMat)
   pad2.position.set(0.12, 0.008, 0)
   g.add(pad1, pad2)
 
@@ -614,35 +642,19 @@ export function createSMDResistorMesh() {
 
 export function createSMDCapacitorMesh() {
   const g = new THREE.Group()
-  const capMat = new THREE.MeshStandardMaterial({
-    color: 0x936138,
-    roughness: 0.45,
-    metalness: 0.1,
-  })
-  const silverMat = new THREE.MeshStandardMaterial({
-    color: 0xe2e8f0,
-    roughness: 0.12,
-    metalness: 0.98,
-  })
-  const padMat = new THREE.MeshStandardMaterial({
-    color: 0xfacc15,
-    roughness: 0.16,
-    metalness: 0.95,
-  })
-
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.13, 0.15), capMat)
+  const body = new THREE.Mesh(sharedCapBodyGeom, sharedCapMat)
   body.position.y = 0.065
   g.add(body)
 
-  const e1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.155), silverMat)
+  const e1 = new THREE.Mesh(sharedCapEndGeom, sharedSilverMat)
   e1.position.set(-0.12, 0.065, 0)
-  const e2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.155), silverMat)
+  const e2 = new THREE.Mesh(sharedCapEndGeom, sharedSilverMat)
   e2.position.set(0.12, 0.065, 0)
   g.add(e1, e2)
 
-  const pad1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.016, 0.18), padMat)
+  const pad1 = new THREE.Mesh(sharedCapPadGeom, sharedGoldPadMat)
   pad1.position.set(-0.13, 0.008, 0)
-  const pad2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.016, 0.18), padMat)
+  const pad2 = new THREE.Mesh(sharedCapPadGeom, sharedGoldPadMat)
   pad2.position.set(0.13, 0.008, 0)
   g.add(pad1, pad2)
 
@@ -651,47 +663,23 @@ export function createSMDCapacitorMesh() {
 
 export function createSMDDiodeMesh() {
   const g = new THREE.Group()
-  const diodeMat = new THREE.MeshStandardMaterial({
-    color: 0x090d14,
-    roughness: 0.35,
-    metalness: 0.15,
-  })
-  const bandMat = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    roughness: 0.3,
-    metalness: 0.05,
-  })
-  const silverMat = new THREE.MeshStandardMaterial({
-    color: 0xe2e8f0,
-    roughness: 0.12,
-    metalness: 0.98,
-  })
-  const padMat = new THREE.MeshStandardMaterial({
-    color: 0xfacc15,
-    roughness: 0.16,
-    metalness: 0.95,
-  })
-
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.12, 0.16), diodeMat)
+  const body = new THREE.Mesh(sharedDiodeBodyGeom, sharedDiodeMat)
   body.position.y = 0.06
   g.add(body)
 
-  const band = new THREE.Mesh(
-    new THREE.BoxGeometry(0.05, 0.125, 0.165),
-    bandMat,
-  )
+  const band = new THREE.Mesh(sharedDiodeBandGeom, sharedBandMat)
   band.position.set(-0.1, 0.06, 0)
   g.add(band)
 
-  const l1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.12), silverMat)
+  const l1 = new THREE.Mesh(sharedDiodeLeadGeom, sharedSilverMat)
   l1.position.set(-0.18, 0.02, 0)
-  const l2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.12), silverMat)
+  const l2 = new THREE.Mesh(sharedDiodeLeadGeom, sharedSilverMat)
   l2.position.set(0.18, 0.02, 0)
   g.add(l1, l2)
 
-  const pad1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.016, 0.18), padMat)
+  const pad1 = new THREE.Mesh(sharedDiodePadGeom, sharedGoldPadMat)
   pad1.position.set(-0.18, 0.008, 0)
-  const pad2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.016, 0.18), padMat)
+  const pad2 = new THREE.Mesh(sharedDiodePadGeom, sharedGoldPadMat)
   pad2.position.set(0.18, 0.008, 0)
   g.add(pad1, pad2)
 

@@ -57,6 +57,7 @@ export default function ScrollShowcase() {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [activeStage, setActiveStage] = useState(0)
   const [gaugeColor, setGaugeColor] = useState("#FF1238")
+  const [loadCount, setLoadCount] = useState(1)
 
   // Animation and frame management refs
   const imagesRef = useRef([])
@@ -79,13 +80,14 @@ export default function ScrollShowcase() {
     img0.onload = () => {
       images[0] = img0
       loadedCountRef.current += 1
+      setLoadCount((prev) => prev + 1)
       drawFrame(0)
     }
 
-    // Load remaining frames in batches
+    // Load remaining frames in small batches
     let currentBatch = 1
     const loadNextBatch = () => {
-      const batchSize = 10
+      const batchSize = 12
       const end = Math.min(TOTAL_FRAMES, currentBatch + batchSize)
       for (let i = currentBatch; i < end; i += 1) {
         const img = new Image()
@@ -93,15 +95,16 @@ export default function ScrollShowcase() {
         img.onload = () => {
           images[i] = img
           loadedCountRef.current += 1
+          setLoadCount(loadedCountRef.current)
         }
       }
       currentBatch = end
       if (currentBatch < TOTAL_FRAMES) {
-        setTimeout(loadNextBatch, 40)
+        setTimeout(loadNextBatch, 35)
       }
     }
 
-    const timer = setTimeout(loadNextBatch, 50)
+    const timer = setTimeout(loadNextBatch, 40)
     return () => clearTimeout(timer)
   }, [])
 
@@ -138,7 +141,6 @@ export default function ScrollShowcase() {
 
       if (!imgWidth || !imgHeight) return
 
-      // Calculate cover dimensions
       const scale = Math.max(cWidth / imgWidth, cHeight / imgHeight)
       const drawWidth = imgWidth * scale
       const drawHeight = imgHeight * scale
@@ -157,7 +159,7 @@ export default function ScrollShowcase() {
       const canvas = canvasRef.current
       if (!canvas) return
       const rect = canvas.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
       canvas.width = rect.width * dpr
       canvas.height = rect.height * dpr
       const ctx = canvas.getContext("2d")
@@ -170,7 +172,8 @@ export default function ScrollShowcase() {
     return () => window.removeEventListener("resize", handleResize)
   }, [drawFrame])
 
-  // Scroll detection & progress computation
+  // Threshold-based stage switching: NOT micro-percentage tied!
+  // Stages change cleanly when progress crosses discrete threshold marks.
   useEffect(() => {
     const handleScroll = () => {
       const track = trackRef.current
@@ -185,23 +188,21 @@ export default function ScrollShowcase() {
 
       setScrollProgress(progress)
 
-      // Determine active stage
+      // Discrete threshold switching (About -> Domains -> Sponsors)
       let stage = 0
-      if (progress >= 0.64) {
-        stage = 2 // Sponsors (kept at last)
+      if (progress >= 0.65) {
+        stage = 2 // Stage 3: Sponsors
       } else if (progress >= 0.32) {
-        stage = 1 // Technical Domains
+        stage = 1 // Stage 2: Technical Domains
       } else {
-        stage = 0 // About
+        stage = 0 // Stage 1: About
       }
       setActiveStage(stage)
 
-      // Dynamic theme liquid accent color matching active section
       if (stage === 0) setGaugeColor("#FF1238")
       else if (stage === 1) setGaugeColor("#00E5FF")
       else setGaugeColor("#FFB800")
 
-      // Flag scrolling state
       isScrollingRef.current = true
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
 
@@ -220,26 +221,21 @@ export default function ScrollShowcase() {
     }
   }, [])
 
-  // Continuous animation loop: handles scroll playback & idle video loop
+  // Continuous animation loop for smooth frame sequence interpolation
   useEffect(() => {
     const loop = (now) => {
       rafIdRef.current = requestAnimationFrame(loop)
 
       if (isScrollingRef.current) {
-        // Scrolling: smoothly chase target frame corresponding to scroll progress (0-100)
         const targetFrame = scrollProgress * (TOTAL_FRAMES - 1)
         currentFrameRef.current +=
-          (targetFrame - currentFrameRef.current) * 0.22
+          (targetFrame - currentFrameRef.current) * 0.2
         staticBaseFrameRef.current = currentFrameRef.current
         staticStartTimeRef.current = now
       } else {
-        // Static (not scrolling): oscillate through adjacent frames in a smooth continuous loop
-        const elapsed = (now - (staticStartTimeRef.current || now)) * 0.001
-        // Smooth sine wave swaying ±4 frames around current position
-        const loopOffset = Math.sin(elapsed * 2.8) * 4.2
-        const desiredFrame = staticBaseFrameRef.current + loopOffset
+        // When not scrolling, keep frames strictly still (no sine wave animation)
         currentFrameRef.current +=
-          (desiredFrame - currentFrameRef.current) * 0.15
+          (staticBaseFrameRef.current - currentFrameRef.current) * 0.12
       }
 
       const frameToDraw = Math.round(
@@ -254,7 +250,7 @@ export default function ScrollShowcase() {
     }
   }, [drawFrame, scrollProgress])
 
-  // Pager click navigation
+  // Pager click navigation to stage
   const scrollToStage = (stageIndex) => {
     const track = trackRef.current
     if (!track) return
@@ -272,94 +268,13 @@ export default function ScrollShowcase() {
     })
   }
 
-  // Calculate 3D Revolving Orbital Transforms around the SloshGauge
-  // Stage 0: About (revolves on Left side)
-  // Stage 1: Domains (revolves on Right side)
-  // Stage 2: Sponsors (revolves to envelop Left and Right with SloshGauge at 100% full capacity)
-  const getAboutTransform = () => {
-    const p = scrollProgress
-    if (p > 0.38)
-      return {
-        opacity: 0,
-        pointerEvents: "none",
-        transform: "rotateY(40deg) translateZ(-250px) translateX(-80px)",
-      }
-    const dist = Math.abs(p - 0.16)
-    const opacity = Math.max(0, 1 - dist * 4.5)
-    const rotY = (p - 0.16) * 55
-    const tx = (p - 0.16) * -80
-    const tz = (1 - opacity) * -120
-    return {
-      opacity,
-      transform: `perspective(1200px) rotateY(${rotY.toFixed(1)}deg) translateX(${tx.toFixed(1)}px) translateZ(${tz.toFixed(1)}px)`,
-    }
-  }
-
-  const getDomainsTransform = () => {
-    const p = scrollProgress
-    if (p < 0.28 || p > 0.72)
-      return {
-        opacity: 0,
-        pointerEvents: "none",
-        transform: "rotateY(-40deg) translateZ(-250px) translateX(80px)",
-      }
-    const dist = Math.abs(p - 0.5)
-    const opacity = Math.max(0, 1 - dist * 4.5)
-    const rotY = (p - 0.5) * -55
-    const tx = (p - 0.5) * 80
-    const tz = (1 - opacity) * -120
-    return {
-      opacity,
-      transform: `perspective(1200px) rotateY(${rotY.toFixed(1)}deg) translateX(${tx.toFixed(1)}px) translateZ(${tz.toFixed(1)}px)`,
-    }
-  }
-
-  const getSponsorsLeftTransform = () => {
-    const p = scrollProgress
-    if (p < 0.6)
-      return {
-        opacity: 0,
-        pointerEvents: "none",
-        transform: "rotateY(-35deg) translateZ(-200px) translateX(-60px)",
-      }
-    const dist = Math.max(0, 0.86 - p)
-    const opacity = Math.max(0, 1 - dist * 4.2)
-    const rotY = (0.86 - Math.min(0.86, p)) * -30
-    const tz = (opacity - 1) * 120
-    return {
-      opacity,
-      transform: `perspective(1200px) rotateY(${rotY.toFixed(1)}deg) translateZ(${tz.toFixed(1)}px)`,
-    }
-  }
-
-  const getSponsorsRightTransform = () => {
-    const p = scrollProgress
-    if (p < 0.6)
-      return {
-        opacity: 0,
-        pointerEvents: "none",
-        transform: "rotateY(35deg) translateZ(-200px) translateX(60px)",
-      }
-    const dist = Math.max(0, 0.86 - p)
-    const opacity = Math.max(0, 1 - dist * 4.2)
-    const rotY = (0.86 - Math.min(0.86, p)) * 30
-    const tz = (opacity - 1) * 120
-    return {
-      opacity,
-      transform: `perspective(1200px) rotateY(${rotY.toFixed(1)}deg) translateZ(${tz.toFixed(1)}px)`,
-    }
-  }
-
   const gaugeValue = Math.round(scrollProgress * 100)
+  const isLoadedAll = loadCount >= TOTAL_FRAMES * 0.75
 
   return (
-    <section className="showcase-track" ref={trackRef}>
-      {/* Hash anchors for navigation links */}
-      <span className="showcase-anchor" id="about" style={{ top: "4%" }} />
-      <span className="showcase-anchor" id="domains" style={{ top: "38%" }} />
-      <span className="showcase-anchor" id="sponsors" style={{ top: "72%" }} />
+    <section className="showcase-track scrollbar-none" id="showcase" ref={trackRef}>
 
-      <div className="showcase-sticky">
+      <div className="showcase-sticky scrollbar-none">
         {/* Dynamic Energy Currents Canvas Background */}
         <div className="showcase-canvas-container">
           <canvas className="showcase-canvas" ref={canvasRef} />
@@ -367,14 +282,67 @@ export default function ScrollShowcase() {
           <div className="showcase-grid-lines" />
         </div>
 
-        {/* 3D Stage & SloshGauge Revolving Layout */}
-        <div className="showcase-stage-layout">
-          {/* STAGE 1: ABOUT (Revolves on Left Side of SloshGauge) */}
+        {/* PHONE ONLY: Sleek Thin Top Progress Bar */}
+        <div className="showcase-phone-bar">
+          <div
+            className="showcase-phone-bar-fill"
+            style={{
+              width: `${gaugeValue}%`,
+              backgroundColor: gaugeColor,
+              boxShadow: `0 0 10px ${gaugeColor}`,
+            }}
+          />
+          <div className="showcase-phone-meta">
+            <span>{isLoadedAll ? `${gaugeValue}%` : "LOADING..."}</span>
+          </div>
+        </div>
+
+        {/* TABLET ONLY: Left-side Vertical Stage & Scroll Rail */}
+        <div className="showcase-tab-left-rail">
+          <div className="showcase-tab-rail-track">
+            <div
+              className="showcase-tab-rail-progress"
+              style={{
+                height: `${gaugeValue}%`,
+                backgroundColor: gaugeColor,
+              }}
+            />
+          </div>
+          <div className="showcase-tab-rail-pills">
+            <button
+              className={`showcase-tab-pill ${activeStage === 0 ? "is-active" : ""}`}
+              onClick={() => scrollToStage(0)}
+              type="button"
+            >
+              <span className="tab-pill-dot" />
+              <span className="tab-pill-text">01 ABOUT</span>
+            </button>
+            <button
+              className={`showcase-tab-pill ${activeStage === 1 ? "is-active" : ""}`}
+              onClick={() => scrollToStage(1)}
+              type="button"
+            >
+              <span className="tab-pill-dot" />
+              <span className="tab-pill-text">02 DOMAINS</span>
+            </button>
+            <button
+              className={`showcase-tab-pill ${activeStage === 2 ? "is-active" : ""}`}
+              onClick={() => scrollToStage(2)}
+              type="button"
+            >
+              <span className="tab-pill-dot" />
+              <span className="tab-pill-text">03 SPONSORS</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Main Stage & SloshGauge Layout */}
+        <div className="showcase-stage-layout scrollbar-none">
+          {/* STAGE 1: ABOUT */}
           <div
             className={`showcase-stage-card showcase-stage-card--about ${
-              activeStage === 0 ? "is-active" : ""
+              activeStage === 0 ? "is-active" : "is-inactive"
             }`}
-            style={getAboutTransform()}
           >
             <div className="showcase-glass-panel">
               <div className="section-label">
@@ -384,7 +352,7 @@ export default function ScrollShowcase() {
               </div>
 
               <div className="flex items-center gap-3 my-2">
-                <BrandMark />
+                <BrandMark className="h-6 w-auto md:h-7 inline-block align-middle" />
                 <h2 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-white m-0">
                   AAVESH
                 </h2>
@@ -427,14 +395,7 @@ export default function ScrollShowcase() {
           {/* CENTRAL ANCHOR: SLOSHGAUGE REACTOR HOUSING */}
           <div className="showcase-reactor-col">
             <div className="showcase-reactor-housing">
-              <div className="showcase-reactor-header">
-                <span className="showcase-reactor-tag">FLUX CORE</span>
-                <span className="font-mono text-[10px] text-gray-400">
-                  {isScrollingRef.current ? "ACTIVE FLOW" : "HARMONIC LOOP"}
-                </span>
-              </div>
-
-              {/* Authentic SloshGauge with fluid physics simulation */}
+              {/* Clean Reactor SloshGauge with percentage only */}
               <SloshGauge
                 ariaLabel="Energy Flux Capacity"
                 glassColor="rgba(11, 16, 26, 0.85)"
@@ -451,19 +412,6 @@ export default function ScrollShowcase() {
                 viscosity={0.16}
                 width={92}
               />
-
-              <div className="showcase-reactor-footer">
-                <span className="showcase-reactor-stage-badge">
-                  {activeStage === 0 && "STAGE 01 · ABOUT"}
-                  {activeStage === 1 && "STAGE 02 · DOMAINS"}
-                  {activeStage === 2 && "STAGE 03 · SPONSORS"}
-                </span>
-                <span className="text-[10px] text-gray-400 font-mono">
-                  {gaugeValue === 100
-                    ? "MAX CAPACITY REACHED"
-                    : `${gaugeValue}% SYSTEM CHARGE`}
-                </span>
-              </div>
             </div>
 
             {/* Quick-Stage Navigation Pager */}
@@ -498,12 +446,11 @@ export default function ScrollShowcase() {
             </div>
           </div>
 
-          {/* STAGE 2: TECHNICAL DOMAINS (Revolves on Right Side of SloshGauge) */}
+          {/* STAGE 2: TECHNICAL DOMAINS */}
           <div
             className={`showcase-stage-card showcase-stage-card--domains ${
-              activeStage === 1 ? "is-active" : ""
+              activeStage === 1 ? "is-active" : "is-inactive"
             }`}
-            style={getDomainsTransform()}
           >
             <div className="showcase-glass-panel showcase-glass-panel--cyan">
               <div className="section-label">
@@ -553,71 +500,67 @@ export default function ScrollShowcase() {
             </div>
           </div>
 
-          {/* STAGE 3: SPONSORS (Revolves around SloshGauge to envelop Left and Right - Kept at Last) */}
-          {activeStage === 2 && (
-            <>
-              {/* Sponsors Left Panel */}
-              <div
-                className="showcase-stage-card showcase-stage-card--sponsors-left is-active"
-                style={getSponsorsLeftTransform()}
-              >
-                <div className="showcase-glass-panel showcase-glass-panel--gold">
-                  <div className="section-label">
-                    <span>08</span>
-                    <span className="section-label__line" />
-                    <span>Sponsors &amp; Partnerships</span>
-                  </div>
-
-                  <h2 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-white my-2">
-                    Build The Next Thing{" "}
-                    <span className="text-[#FFB800]">With Us.</span>
-                  </h2>
-
-                  <p className="text-sm text-gray-300 leading-relaxed mb-4">
-                    Partnerships empower student builders with state-of-the-art
-                    tools, component fabrication, compute access, and direct
-                    industry mentorship. Join us in shaping tomorrow&apos;s
-                    engineers.
-                  </p>
-
-                  <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300">
-                    <span className="inline-block w-2 h-2 rounded-full bg-amber-400 mr-2 shadow-[0_0_8px_#fbbf24]" />
-                    Official corporate partnerships &amp; lab grants welcome for
-                    the upcoming academic year.
-                  </div>
-                </div>
+          {/* STAGE 3: SPONSORS */}
+          <div
+            className={`showcase-stage-card showcase-stage-card--sponsors-left ${
+              activeStage === 2 ? "is-active" : "is-inactive"
+            }`}
+          >
+            <div className="showcase-glass-panel showcase-glass-panel--gold">
+              <div className="section-label">
+                <span>08</span>
+                <span className="section-label__line" />
+                <span>Sponsors &amp; Partnerships</span>
               </div>
 
-              {/* Sponsors Right Panel */}
-              <div
-                className="showcase-stage-card showcase-stage-card--sponsors-right is-active"
-                style={getSponsorsRightTransform()}
-              >
-                <div className="showcase-glass-panel showcase-glass-panel--gold">
-                  <div className="section-label">
-                    <span>OPPORTUNITIES</span>
-                    <span className="section-label__line" />
-                    <span>Active Tiers</span>
-                  </div>
+              <h2 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-white my-2">
+                Build The Next Thing{" "}
+                <span className="text-[#FFB800]">With Us.</span>
+              </h2>
 
-                  <div className="showcase-sponsor-tiers">
-                    {sponsorTiers.map((tier) => (
-                      <span className="showcase-tier-pill" key={tier}>
-                        {tier}
-                      </span>
-                    ))}
-                  </div>
+              <p className="text-sm text-gray-300 leading-relaxed mb-4">
+                Partnerships empower student builders with state-of-the-art
+                tools, component fabrication, compute access, and direct
+                industry mentorship. Join us in shaping tomorrow&apos;s
+                engineers.
+              </p>
 
-                  <div className="mt-4 flex items-center justify-start gap-3">
-                    <a className="button button--primary" href="#contact">
-                      <span>Discuss a partnership</span>
-                      <ArrowRight aria-hidden="true" size={16} />
-                    </a>
-                  </div>
-                </div>
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300">
+                <span className="inline-block w-2 h-2 rounded-full bg-amber-400 mr-2 shadow-[0_0_8px_#fbbf24]" />
+                Official corporate partnerships &amp; lab grants welcome for
+                the upcoming academic year.
               </div>
-            </>
-          )}
+            </div>
+          </div>
+
+          <div
+            className={`showcase-stage-card showcase-stage-card--sponsors-right ${
+              activeStage === 2 ? "is-active" : "is-inactive"
+            }`}
+          >
+            <div className="showcase-glass-panel showcase-glass-panel--gold">
+              <div className="section-label">
+                <span>OPPORTUNITIES</span>
+                <span className="section-label__line" />
+                <span>Active Tiers</span>
+              </div>
+
+              <div className="showcase-sponsor-tiers">
+                {sponsorTiers.map((tier) => (
+                  <span className="showcase-tier-pill" key={tier}>
+                    {tier}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center justify-start gap-3">
+                <a className="button button--primary" href="#contact">
+                  <span>Discuss a partnership</span>
+                  <ArrowRight aria-hidden="true" size={16} />
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

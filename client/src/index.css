@@ -7,7 +7,7 @@
 @font-face {
   font-family: "AAVESH Display";
   src: url("/fonts/AAVESH-Display-Bold.otf") format("opentype");
-  font-weight: 600 800;
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
@@ -15,7 +15,7 @@
 @font-face {
   font-family: "AAVESH Devanagari";
   src: url("/fonts/AAVESH-Devanagari-Regular.ttf") format("truetype");
-  font-weight: 400 700;
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
@@ -24,7 +24,7 @@
   font-family: "Aavesh";
   src: url("/fonts/Aavesh-Regular.woff2") format("woff2"),
        url("/fonts/Aavesh-Regular.ttf") format("truetype");
-  font-weight: 300 700;
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
@@ -44,10 +44,10 @@
   --border: #24303b;
   --border-subtle: #151e27;
   --focus: #70c7ff;
-  --display: "AAVESH Display", sans-serif;
-  --body: "Aavesh", sans-serif;
-  --mono: "Aavesh", "AAVESH Display", sans-serif;
-  --aavesh-display: "AAVESH Display", sans-serif;
+  --display: "AAVESH Display", "Aavesh", sans-serif;
+  --body: "Aavesh", "AAVESH Display", sans-serif;
+  --mono: "Aavesh", "AAVESH Display", monospace;
+  --aavesh-display: "AAVESH Display", "Aavesh", sans-serif;
   --aavesh-devanagari: "AAVESH Devanagari", sans-serif;
   --container: 1280px;
   --page-pad: clamp(1.25rem, 4vw, 3rem);
@@ -63,12 +63,24 @@
 html {
   background: var(--bg);
   scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   background:
     radial-gradient(circle at 70% 8%, rgb(16 87 140 / 10%), transparent 24rem),
     var(--bg);
@@ -104,7 +116,17 @@ h6,
 .section-label,
 .content-badge,
 .hero-eyebrow-index,
-.hero-eyebrow-tag {
+.hero-eyebrow-tag,
+.domain-title,
+.project-title,
+.event-title,
+.team-card h3,
+.gallery-card h3,
+.showcase-domain-title,
+.showcase-stage-card h2,
+.infinite-menu__title,
+.depth-carousel__caption h4,
+.gooey-nav__link {
   font-family: var(--display);
 }
 
@@ -649,9 +671,18 @@ button.button {
 .about-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   margin-top: 0.5rem;
-  font-size: clamp(3rem, 5.4vw, 5.6rem);
+  font-size: clamp(2.2rem, 4.2vw, 4.2rem);
+}
+
+.about-title img {
+  height: clamp(1.8rem, 3.2vw, 2.6rem);
+  width: auto;
+  max-width: 3.5rem;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: inline-block;
 }
 
 .about-title svg {
@@ -1528,7 +1559,20 @@ button.button {
   }
 
   .about-grid {
-    gap: 3rem;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .about-media > .image-frame {
+    height: clamp(16rem, 40vw, 24rem);
+  }
+
+  .about-note {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    margin-top: 1rem;
   }
 
   .events-grid {
@@ -1663,7 +1707,13 @@ button.button {
   }
 
   .about-title {
-    font-size: 3.5rem;
+    font-size: clamp(2.1rem, 9.5vw, 2.9rem);
+    gap: 0.6rem;
+  }
+
+  .about-title img {
+    height: 1.85rem;
+    width: auto;
   }
 
   .about-media > .image-frame {

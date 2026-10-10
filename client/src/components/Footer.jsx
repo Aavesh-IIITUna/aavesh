@@ -1,135 +1,68 @@
-import { useClocks } from '../hooks/useClocks.js';
+import BrandMark from "./BrandMark"
+import { useClocks } from "../hooks/useClocks"
 
-export default function Footer({ society, tracks, onReplayIntro }) {
-  const { utc, ist } = useClocks(true);
-  const socials = society?.socials ?? {};
-  const socialEntries = [
-    ['GITHUB', socials.github ?? 'https://github.com'],
-    ['LINKEDIN', socials.linkedin ?? 'https://linkedin.com'],
-    ['DISCORD', socials.discord ?? 'https://discord.com'],
-    ['INSTAGRAM', socials.instagram ?? 'https://instagram.com'],
-  ];
+const navigation = [
+  ["Home", "#top"],
+  ["About", "#about"],
+  ["Domains", "#domains"],
+  ["Projects", "#projects"],
+  ["Events", "#events"],
+  ["Gallery", "#gallery"],
+  ["Team", "#team"],
+  ["Sponsors", "#sponsors"],
+  ["Contact", "#contact"],
+]
+
+export default function Footer({ onReplayIntro, society }) {
+  const { utc, ist } = useClocks(true)
 
   return (
-    <footer className="flex w-full flex-col items-start justify-between gap-8 border-t border-outline-variant bg-surface-container-lowest px-6 py-8">
-      <div className="flex w-full flex-wrap items-center justify-between gap-4 border-b border-outline-variant pb-6 font-label-xs text-label-xs">
-        <div className="flex items-center gap-4">
-          <span className="font-bold tracking-widest text-primary">[AAVESH_LABS]</span>
-          <span className="text-outline">HARDWARE &amp; SIGNAL INTELLIGENCE DIVISION</span>
+    <footer className="site-footer">
+      <div className="container footer-main">
+        <div className="footer-brand">
+          <BrandMark className="h-8 w-auto inline-block" />
+          <div>
+            <strong>{society?.shortName || "AAVESH"}</strong>
+            <span>{society?.tagline || "Electronics & Technology Society"}</span>
+            <span>{society?.institute || "IIIT Una"}</span>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-4">
-          {[
-            ['[INDEX]', '#top'],
-            ['[VLSI_ARCH]', '#research'],
-            ['[SIGNAL_LAB]', '#hardware'],
-            ['[DOCS]', '#specs'],
-            ['[GITHUB]', 'https://github.com'],
-          ].map(([label, href]) => (
-            <a
-              key={label}
-              href={href}
-              className="text-on-surface-variant underline hover:text-primary-fixed-dim"
-            >
+
+        <nav aria-label="Footer navigation" className="footer-nav">
+          {navigation.map(([label, href]) => (
+            <a href={href} key={href}>
               {label}
             </a>
           ))}
-        </div>
-      </div>
-
-      <div className="grid w-full grid-cols-1 gap-8 font-body-md text-body-md md:grid-cols-12">
-        <div className="space-y-4 md:col-span-5">
-          <span className="block font-label-xs text-label-xs uppercase tracking-widest text-primary-container">
-            {'// SOCIETY MISSION'}
-          </span>
-          <p className="font-body-md text-body-md leading-relaxed text-on-surface-variant">
-            {society?.mission}
-          </p>
-          <div className="space-y-1 pt-2 font-label-xs text-label-xs text-outline">
-            <p>{society?.institute ?? 'Indian Institute of Information Technology Una'}</p>
-            <p>{society?.accreditation}</p>
-          </div>
-        </div>
-
-        <div className="space-y-4 md:col-span-3">
-          <span className="block font-label-xs text-label-xs uppercase tracking-widest text-primary-container">
-            {'// FOCUS TRACKS'}
-          </span>
-          <ul className="space-y-2 font-label-xs text-label-xs text-on-surface-variant">
-            {(tracks ?? []).map((track, i) => (
-              <li key={track.code ?? track.title ?? i} className="flex items-center gap-2">
-                <span className="font-mono text-outline-variant">
-                  {track.code ?? String(i + 1).padStart(2, '0')}.
-                </span>
-                <span>{track.title}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="space-y-4 md:col-span-4">
-          <span className="block font-label-xs text-label-xs uppercase tracking-widest text-primary-container">
-            {'// TELEMETRY & COMMS'}
-          </span>
-          <div className="space-y-1 font-mono font-label-xs text-label-xs text-on-surface-variant">
-            <p className="text-primary">COORDS: 31&deg;28&apos;48&quot;N 76&deg;11&apos;24&quot;E</p>
-            <p>LOC: Saloh, Una, Himachal Pradesh - 177209</p>
-            <p>
-              COMM:{' '}
-              <a className="text-primary hover:underline" href={`mailto:${society?.email}`}>
-                {society?.email}
-              </a>
-            </p>
-            <p>
-              INSTITUTE:{' '}
-              <a
-                className="text-primary hover:underline"
-                href={society?.instituteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                iiitu.ac.in
-              </a>
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 pt-2 font-label-xs text-label-xs">
-            {socialEntries.map(([label, href]) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border border-outline-variant px-2 py-1 text-on-surface hover:border-primary hover:text-primary"
-              >
-                [{label}]
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex w-full flex-col items-center justify-between gap-4 border-t border-outline-variant pt-6 font-label-xs text-label-xs text-on-surface-variant sm:flex-row">
-        <div>&copy; 2025 AAVESH IIIT UNA. ALL RIGHTS RESERVED. HARDWARE &amp; SIGNAL INTELLIGENCE DIVISION.</div>
-        <div className="flex items-center gap-4 font-mono text-outline">
           {onReplayIntro && (
-            <>
-              <button
-                type="button"
-                onClick={onReplayIntro}
-                className="hover:text-primary transition-colors cursor-pointer uppercase tracking-wider"
-              >
-                [REPLAY_INTRO]
-              </button>
-              <span aria-hidden="true">&bull;</span>
-            </>
+            <button
+              type="button"
+              onClick={onReplayIntro}
+              className="text-xs uppercase tracking-wider text-[#FF1238] hover:text-white transition-colors cursor-pointer bg-transparent border-0 p-0 text-left font-mono"
+            >
+              [Replay Intro]
+            </button>
           )}
-          <span>{utc}</span>
-          <span aria-hidden="true">&bull;</span>
-          <span>{ist}</span>
-          <span className="border border-outline-variant bg-surface-container px-1.5 py-0.5 text-primary-container">
-            [CORE_STABLE]
-          </span>
+        </nav>
+
+        <div className="footer-social" aria-label="Social connections">
+          <span>Official Lab Frequency</span>
+          <p>{society?.email || "aavesh@iiitu.ac.in"}</p>
+          <div className="flex items-center gap-3 font-mono text-[10px] text-gray-400 mt-1">
+            <span>UTC: {utc}</span>
+            <span>•</span>
+            <span>IST: {ist}</span>
+          </div>
         </div>
+      </div>
+
+      <div className="container footer-bottom">
+        <span>AAVESH // Indian Institute of Information Technology Una</span>
+        <span>
+          {society?.accreditation ||
+            "An Institute of National Importance under Ministry of Education, Govt. of India"}
+        </span>
       </div>
     </footer>
-  );
+  )
 }

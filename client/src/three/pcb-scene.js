@@ -25,7 +25,7 @@ export const THEME_CONFIGS = [
     name: "AAVESH Cyan",
     hex: 0x00f0ff,
     speed: 0.9,
-    bloom: 0.04,
+    bloom: 0.24,
     desc: "SOC Core Nominal",
   },
   {
@@ -33,7 +33,7 @@ export const THEME_CONFIGS = [
     name: "Obsidian Gold",
     hex: 0xfacc15,
     speed: 1.4,
-    bloom: 0.05,
+    bloom: 0.28,
     desc: "Quantum Overdrive",
   },
   {
@@ -41,7 +41,7 @@ export const THEME_CONFIGS = [
     name: "Cyber Emerald",
     hex: 0x10b981,
     speed: 2.0,
-    bloom: 0.04,
+    bloom: 0.24,
     desc: "Neural Acceleration",
   },
   {
@@ -49,7 +49,7 @@ export const THEME_CONFIGS = [
     name: "Crimson Surge",
     hex: 0xf43f5e,
     speed: 2.7,
-    bloom: 0.06,
+    bloom: 0.28,
     desc: "Hyper-Clocked Matrix",
   },
   {
@@ -57,7 +57,7 @@ export const THEME_CONFIGS = [
     name: "Ultra Violet",
     hex: 0xa855f7,
     speed: 1.2,
-    bloom: 0.04,
+    bloom: 0.24,
     desc: "Phase Resonance",
   },
 ]
@@ -168,8 +168,8 @@ export class PCBSceneEngine {
   constructor(container, options = {}) {
     this.container = container
     this.options = {
-      bloomStrength: 0.02,
-      bloomRadius: 0.04,
+      bloomStrength: 0.22,
+      bloomRadius: 0.35,
       pulseSpeed: 0.9,
       autoRotate: true,
       colorTheme: "cyan",
@@ -194,20 +194,31 @@ export class PCBSceneEngine {
     const width = container.clientWidth || window.innerWidth
     const height = container.clientHeight || window.innerHeight
 
-    // Cinematic perspective camera
-    this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100)
-    this.camera.position.set(6.2, 5.2, 7.8)
+    // Cinematic perspective camera with responsive viewport scaling
+    let initFov = 34
+    let initPos = [5.8, 4.8, 7.2]
+    if (width < 640) {
+      initFov = 44
+      initPos = [7.2, 6.2, 9.0]
+    } else if (width < 1024) {
+      initFov = 38
+      initPos = [6.5, 5.5, 8.0]
+    }
 
-    // Renderer
+    this.camera = new THREE.PerspectiveCamera(initFov, width / height, 0.1, 100)
+    this.camera.position.set(...initPos)
+
+    // High-performance, razor-sharp WebGL Renderer
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
       powerPreference: "high-performance",
     })
     this.renderer.setSize(width, height)
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    const maxDpr = Math.min(window.devicePixelRatio || 1, 2.0)
+    this.renderer.setPixelRatio(maxDpr)
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
-    this.renderer.toneMappingExposure = 0.95
+    this.renderer.toneMappingExposure = 1.25
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
@@ -226,16 +237,15 @@ export class PCBSceneEngine {
     this.controls.target.set(0.1, 0.1, -0.2)
     this.controls.update()
 
-    // Post-processing: UnrealBloomPass with subtle minimal glow
+    // Post-processing: UnrealBloomPass for electric neon laser traces
     const renderPass = new RenderPass(this.scene, this.camera)
     this.bloomPass = new UnrealBloomPass(
       new THREE.Vector2(width, height),
       this.options.bloomStrength,
       this.options.bloomRadius,
-      0.22,
+      0.18,
     )
     const outputPass = new OutputPass()
-
     this.composer = new EffectComposer(this.renderer)
     this.composer.addPass(renderPass)
     this.composer.addPass(this.bloomPass)
@@ -259,6 +269,19 @@ export class PCBSceneEngine {
     this.mouse = new THREE.Vector2(-100, -100)
     this.hoveredObject = null
     this.isLogoHovered = false
+    this.isMeshHovered = false
+    this.isVisible = true
+
+    // Intersection observer to completely pause rendering when Hero is out of viewport (0% GPU)
+    if (typeof IntersectionObserver !== "undefined") {
+      this.observer = new IntersectionObserver(
+        ([entry]) => {
+          this.isVisible = entry.isIntersecting
+        },
+        { threshold: 0.05 },
+      )
+      this.observer.observe(container)
+    }
 
     this.clock = new THREE.Clock()
     this.animationFrameId = 0
@@ -507,37 +530,35 @@ export class PCBSceneEngine {
     this.logoMesh.name = "AAVESH_Embedded_Logo"
     this.logoMesh.pcbData = {
       name: "AAVESH [CORE RESONANCE LOGO]",
-      desc: "⚡ Click once to cycle glow colour & pulse speed",
+              desc: "AAVESH Core Resonance Embedded Logo Matrix",
       voltage: "3.3V Active Matrix",
       freq: "Harmonic Clock Sync",
     }
     this.chipGroup.add(this.logoMesh)
 
-    // 64 Metallic Gull-wing Pins
+    // 64 Metallic Gull-wing Pins with Shared Geometries
     const pinMat = new THREE.MeshStandardMaterial({
       color: 0xd8e0ea,
       metalness: 0.78,
       roughness: 0.38,
     })
 
+    const upGeom = new THREE.BoxGeometry(0.3, 0.04, 0.08)
+    const kneeGeom = new THREE.BoxGeometry(0.16, 0.12, 0.08)
+    const footGeom = new THREE.BoxGeometry(0.24, 0.03, 0.08)
+
     const createPin = () => {
       const pinGroup = new THREE.Group()
-      const up = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.04, 0.08), pinMat)
+      const up = new THREE.Mesh(upGeom, pinMat)
       up.position.set(0.15, 0.12, 0)
       pinGroup.add(up)
 
-      const knee = new THREE.Mesh(
-        new THREE.BoxGeometry(0.16, 0.12, 0.08),
-        pinMat,
-      )
+      const knee = new THREE.Mesh(kneeGeom, pinMat)
       knee.rotation.z = -Math.PI / 4
       knee.position.set(0.34, 0.06, 0)
       pinGroup.add(knee)
 
-      const foot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.24, 0.03, 0.08),
-        pinMat,
-      )
+      const foot = new THREE.Mesh(footGeom, pinMat)
       foot.position.set(0.48, 0.015, 0)
       pinGroup.add(foot)
 
@@ -935,64 +956,10 @@ export class PCBSceneEngine {
       this.interactiveLeds.forEach((led) => (led.targetIntensity = 0.75))
     })
 
-    // Click handler: detects clicks on logo or chip
-    el.addEventListener("click", () => {
-      this.raycaster.setFromCamera(this.mouse, this.camera)
-      const intersects = this.raycaster.intersectObjects(
-        this.pcbGroup.children,
-        true,
-      )
-
-      if (intersects.length > 0) {
-        let isLogo = false
-        let isChip = false
-
-        for (let i = 0; i < Math.min(3, intersects.length); i++) {
-          let hit = intersects[i].object
-          while (hit && hit !== this.pcbGroup && hit !== this.scene) {
-            if (hit.name === "AAVESH_Embedded_Logo" || hit === this.logoMesh) {
-              isLogo = true
-              break
-            }
-            if (hit.name === "AIC_Chip_Body" || hit.name === "AIC_Chip") {
-              isChip = true
-              break
-            }
-            hit = hit.parent
-          }
-          if (isLogo) break
-        }
-
-        if (isLogo) {
-          // Cycle theme color, speed and minimal glow by clicking once on AAVESH logo
-          this.cycleTheme()
-          return
-        }
-
-        if (isChip) {
-          this.triggerBurstPulse()
-          sounds.playChipPulse()
-          if (this.onChipClick) this.onChipClick()
-          return
-        }
-
-        // Check if any other component clicked
-        let hit = intersects[0].object
-        let pcbData = hit.pcbData
-        while (
-          !pcbData &&
-          hit.parent &&
-          hit.parent !== this.pcbGroup &&
-          hit.parent !== this.scene
-        ) {
-          hit = hit.parent
-          pcbData = hit.pcbData
-        }
-        if (pcbData) {
-          this.triggerBurstPulse()
-          sounds.playChipPulse()
-        }
-      }
+    // Click handler: no sound or component popups per user requirement
+    el.addEventListener("click", (e) => {
+      e.stopPropagation()
+      // Intentionally silent & clean: no sound FX or UI popup triggered on mesh click
     })
 
     // Scroll-reactive rotation speed & direction:
@@ -1044,21 +1011,46 @@ export class PCBSceneEngine {
     }
     window.addEventListener("scroll", handleWindowScroll, { passive: true })
 
-    // Window resize
+    // Window resize with responsive camera FOV & distance adjustment
     this.handleResize = () => {
       const w = this.container.clientWidth || window.innerWidth
       const h = this.container.clientHeight || window.innerHeight
       this.camera.aspect = w / h
+      if (w < 640) {
+        this.camera.fov = 48
+        this.camera.position.set(7.5, 6.5, 9.5)
+      } else if (w < 1024) {
+        this.camera.fov = 42
+        this.camera.position.set(6.8, 5.8, 8.6)
+      } else {
+        this.camera.fov = 38
+        this.camera.position.set(6.2, 5.2, 7.8)
+      }
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(w, h)
-      this.composer.setSize(w, h)
+      if (this.composer) this.composer.setSize(w, h)
     }
+    this.handleResize()
     window.addEventListener("resize", this.handleResize)
+
+    const handlePointerEnter = () => {
+      this.isMeshHovered = true
+    }
+    const handlePointerLeave = () => {
+      this.isMeshHovered = false
+      this.isLogoHovered = false
+      this.hoveredObject = null
+      if (this.onHoverChange) this.onHoverChange(null, 0, 0)
+    }
+    this.renderer.domElement.addEventListener("pointerenter", handlePointerEnter)
+    this.renderer.domElement.addEventListener("pointerleave", handlePointerLeave)
 
     this._cleanupEvents = () => {
       window.removeEventListener("wheel", handleWheel)
       window.removeEventListener("scroll", handleWindowScroll)
       window.removeEventListener("resize", this.handleResize)
+      this.renderer.domElement.removeEventListener("pointerenter", handlePointerEnter)
+      this.renderer.domElement.removeEventListener("pointerleave", handlePointerLeave)
     }
   }
 
@@ -1081,7 +1073,7 @@ export class PCBSceneEngine {
             hoveringLogo = true
             foundData = cur.pcbData || {
               name: "AAVESH [CORE RESONANCE LOGO]",
-              desc: "⚡ Click once to cycle glow colour & pulse speed",
+                      desc: "AAVESH Core Resonance Embedded Logo Matrix",
               voltage: "3.3V Active Matrix",
               freq: "Harmonic Clock Sync",
             }
@@ -1101,10 +1093,10 @@ export class PCBSceneEngine {
     const el = this.renderer.domElement
 
     if (hoveringLogo) {
+      this.isMeshHovered = true
       if (!this.isLogoHovered) {
         this.isLogoHovered = true
         el.style.cursor = "pointer"
-        sounds.playLedTouch(1050)
         if (this.logoMaterial) {
           this.logoMaterial.emissiveIntensity = 0.35
         }
@@ -1122,9 +1114,9 @@ export class PCBSceneEngine {
     }
 
     if (foundData && hitObject) {
+      this.isMeshHovered = true
       if (this.hoveredObject !== hitObject) {
         this.hoveredObject = hitObject
-        if (!hoveringLogo) sounds.playLedTouch(880)
 
         this.interactiveLeds.forEach((led) => {
           if (led.mesh === hitObject || hitObject?.name?.includes("LED")) {
@@ -1138,6 +1130,9 @@ export class PCBSceneEngine {
         this.onHoverChange(foundData, clientX, clientY)
       }
     } else {
+      if (!hoveringLogo) {
+        this.isMeshHovered = false
+      }
       if (this.hoveredObject !== null) {
         this.hoveredObject = null
         this.interactiveLeds.forEach((led) => (led.targetIntensity = 0.22))
@@ -1155,9 +1150,6 @@ export class PCBSceneEngine {
     this.options.colorTheme = nextTheme.id
     this.options.pulseSpeed = nextTheme.speed
     this.options.bloomStrength = nextTheme.bloom
-
-    // 1. Play sound
-    sounds.playThemeChange(this.options.themeIndex)
 
     // 2. Update minimal glow on UnrealBloomPass
     if (this.bloomPass) {
@@ -1236,9 +1228,13 @@ export class PCBSceneEngine {
     })
   }
 
-  // Animation Loop
+  // Animation Loop - Load-optimized with visibility gating and hover stop
   animate() {
     this.animationFrameId = requestAnimationFrame(this.animate)
+
+    // Complete GPU freeze when scrolled away from Hero
+    if (!this.isVisible) return
+
     const delta = this.clock.getDelta()
     const time = this.clock.getElapsedTime()
 
@@ -1254,8 +1250,11 @@ export class PCBSceneEngine {
     )
 
     if (this.controls) {
-      this.controls.autoRotate = this.options.autoRotate
-      this.controls.autoRotateSpeed = this.currentRotateSpeed
+      // Rotation STOPS when hovered!
+      const isHovered = this.isMeshHovered || this.isLogoHovered || this.hoveredObject !== null
+      const shouldRotate = this.options.autoRotate && !isHovered
+      this.controls.autoRotate = shouldRotate
+      this.controls.autoRotateSpeed = shouldRotate ? this.currentRotateSpeed : 0
       this.controls.update()
     }
 
@@ -1279,11 +1278,16 @@ export class PCBSceneEngine {
       this.logoMaterial.emissiveIntensity = 0.08 + 0.02 * Math.sin(time * 1.8)
     }
 
-    this.composer.render()
+    if (this.composer) {
+      this.composer.render()
+    } else {
+      this.renderer.render(this.scene, this.camera)
+    }
   }
 
   dispose() {
     cancelAnimationFrame(this.animationFrameId)
+    if (this.observer) this.observer.disconnect()
     if (this._cleanupEvents) this._cleanupEvents()
     if (this.controls) this.controls.dispose()
     if (this.renderer) {

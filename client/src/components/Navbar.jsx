@@ -1,5 +1,5 @@
 import { Menu, X } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import BrandMark from "./BrandMark"
 
 const navLinks = [
@@ -16,15 +16,140 @@ const navLinks = [
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [activeId, setActiveId] = useState("top")
+  const [indicatorStyle, setIndicatorStyle] = useState({
+    left: 0,
+    width: 0,
+    opacity: 0,
+  })
+  const navLinksRef = useRef([])
+  const isClickScrollingRef = useRef(false)
+  const scrollTimeoutRef = useRef(null)
 
-  // Track subtle scroll for header border opacity
+  // Track active section and header scrolled styling dynamically
   useEffect(() => {
+    let ticking = false
+
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
+      if (ticking) return
+      ticking = true
+
+      requestAnimationFrame(() => {
+        ticking = false
+        const scrollY = window.scrollY
+        setScrolled(scrollY > 20)
+
+        // Ignore scroll spy immediately after user clicks a nav link
+        if (isClickScrollingRef.current) return
+
+        const windowHeight = window.innerHeight
+        const docHeight = document.documentElement.scrollHeight
+
+        // Edge case: Top of the page
+        if (scrollY < 120) {
+          setActiveId("top")
+          return
+        }
+
+        // Edge case: Near bottom of the page
+        if (scrollY + windowHeight >= docHeight - 70) {
+          setActiveId("contact")
+          return
+        }
+
+        // Target trigger line at 32% viewport height for natural reading position
+        const targetLine = scrollY + windowHeight * 0.32
+        const sectionIds = [...navLinks.map((l) => l.href.replace("#", "")), "contact"]
+
+        let matched = "top"
+        for (let i = 0; i < sectionIds.length; i++) {
+          const id = sectionIds[i]
+          const el = document.getElementById(id)
+          if (el) {
+            const rect = el.getBoundingClientRect()
+            const elementTop = rect.top + scrollY
+            const elementBottom = elementTop + rect.height
+
+            if (targetLine >= elementTop && targetLine < elementBottom) {
+              matched = id
+              break
+            } else if (elementTop <= targetLine) {
+              matched = id
+            }
+          }
+        }
+
+        setActiveId(matched)
+      })
     }
+
     window.addEventListener("scroll", handleScroll, { passive: true })
+    handleScroll()
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  // Update sliding pill indicator position whenever activeId changes
+  useLayoutEffect(() => {
+    const activeIndex = navLinks.findIndex(
+      (l) => l.href.replace("#", "") === activeId,
+    )
+    if (activeIndex >= 0 && navLinksRef.current[activeIndex]) {
+      const el = navLinksRef.current[activeIndex]
+      setIndicatorStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+        opacity: 1,
+      })
+    } else {
+      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }))
+    }
+  }, [activeId])
+
+  // Recalculate indicator position on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const activeIndex = navLinks.findIndex(
+        (l) => l.href.replace("#", "") === activeId,
+      )
+      if (activeIndex >= 0 && navLinksRef.current[activeIndex]) {
+        const el = navLinksRef.current[activeIndex]
+        setIndicatorStyle({
+          left: el.offsetLeft,
+          width: el.offsetWidth,
+          opacity: 1,
+        })
+      }
+    }
+    window.addEventListener("resize", handleResize, { passive: true })
+    return () => window.removeEventListener("resize", handleResize)
+  }, [activeId])
+
+  // Smooth scroll handler with offset for fixed header
+  const scrollToSection = (e, href) => {
+    e.preventDefault()
+    const id = href.replace("#", "")
+    setActiveId(id)
+    setMenuOpen(false)
+
+    isClickScrollingRef.current = true
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+    scrollTimeoutRef.current = setTimeout(() => {
+      isClickScrollingRef.current = false
+    }, 800)
+
+    if (id === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      return
+    }
+
+    const el = document.getElementById(id)
+    if (el) {
+      const headerOffset = 76
+      const elTop =
+        el.getBoundingClientRect().top + window.scrollY - headerOffset
+      window.scrollTo({ top: Math.max(0, elTop), behavior: "smooth" })
+    }
+  }
 
   // Close mobile drawer on Escape
   useEffect(() => {
@@ -58,7 +183,7 @@ export default function Navbar() {
           aria-label="AAVESH homepage"
           className="navbar-brand"
           href="#top"
-          onClick={() => setMenuOpen(false)}
+          onClick={(e) => scrollToSection(e, "#top")}
         >
           <div className="navbar-brand-icon">
             <BrandMark />
@@ -69,23 +194,44 @@ export default function Navbar() {
           </div>
         </a>
 
-        {/* Desktop Navigation Links */}
+        {/* Desktop Navigation Links with Hardware-Accelerated Sliding Indicator */}
         <nav aria-label="Main Navigation" className="navbar-links">
-          {navLinks.map(({ label, href }) => (
-            <a
-              className="navbar-link"
-              href={href}
-              key={href}
-              onClick={() => setMenuOpen(false)}
-            >
-              {label}
-            </a>
-          ))}
+          {/* Gliding active pill indicator */}
+          <div
+            aria-hidden="true"
+            className="navbar-active-pill"
+            style={{
+              transform: `translate3d(${indicatorStyle.left}px, 0, 0)`,
+              width: `${indicatorStyle.width}px`,
+              opacity: indicatorStyle.opacity,
+            }}
+          />
+
+          {navLinks.map(({ label, href }, idx) => {
+            const id = href.replace("#", "")
+            const isActive = activeId === id
+            return (
+              <a
+                className={`navbar-link ${isActive ? "is-active" : ""}`}
+                href={href}
+                key={href}
+                onClick={(e) => scrollToSection(e, href)}
+                ref={(el) => (navLinksRef.current[idx] = el)}
+              >
+                {isActive && <span className="navbar-link-dot" />}
+                <span>{label}</span>
+              </a>
+            )
+          })}
         </nav>
 
         {/* Right CTA & Mobile Toggle */}
         <div className="navbar-actions">
-          <a className="navbar-contact-btn" href="#contact">
+          <a
+            className={`navbar-contact-btn ${activeId === "contact" ? "is-active" : ""}`}
+            href="#contact"
+            onClick={(e) => scrollToSection(e, "#contact")}
+          >
             <span>Contact</span>
           </a>
 
@@ -108,22 +254,27 @@ export default function Navbar() {
       >
         <div className="navbar-mobile-inner">
           <nav aria-label="Mobile Navigation" className="navbar-mobile-links">
-            {navLinks.map(({ label, href }) => (
-              <a
-                className="navbar-mobile-link"
-                href={href}
-                key={href}
-                onClick={() => setMenuOpen(false)}
-              >
-                {label}
-              </a>
-            ))}
+            {navLinks.map(({ label, href }) => {
+              const id = href.replace("#", "")
+              const isActive = activeId === id
+              return (
+                <a
+                  className={`navbar-mobile-link ${isActive ? "is-active" : ""}`}
+                  href={href}
+                  key={href}
+                  onClick={(e) => scrollToSection(e, href)}
+                >
+                  <span>{label}</span>
+                  {isActive && <span className="navbar-mobile-dot" />}
+                </a>
+              )
+            })}
             <a
-              className="navbar-mobile-link navbar-mobile-contact"
+              className={`navbar-mobile-link navbar-mobile-contact ${activeId === "contact" ? "is-active" : ""}`}
               href="#contact"
-              onClick={() => setMenuOpen(false)}
+              onClick={(e) => scrollToSection(e, "#contact")}
             >
-              Contact
+              <span>Contact</span>
             </a>
           </nav>
         </div>
