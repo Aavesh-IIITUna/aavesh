@@ -70,29 +70,6 @@ export default function HeroContent({
 
       {/* Call to Actions */}
       <HeroActions />
-
-      {/* Technical Telemetry Strip with live metrics */}
-      <div aria-label="System parameters" className="hero-telemetry-strip">
-        <div className="telemetry-item">
-          <span className="telemetry-label">CORE FREQ</span>
-          <span className="telemetry-value">{currentClock} MHz</span>
-        </div>
-        <div className="telemetry-separator" />
-        <div className="telemetry-item">
-          <span className="telemetry-label">DIE TEMP</span>
-          <span className="telemetry-value">{currentTemp}</span>
-        </div>
-        <div className="telemetry-separator" />
-        <div className="telemetry-item">
-          <span className="telemetry-label">BUS TRAFFIC</span>
-          <span className="telemetry-value">{busLoad}% LOAD</span>
-        </div>
-        <div className="telemetry-separator" />
-        <div className="telemetry-item">
-          <span className="telemetry-label">CAMPUS FOUNDRY</span>
-          <span className="telemetry-value">IIIT UNA (HP)</span>
-        </div>
-      </div>
     </div>
   )
 }

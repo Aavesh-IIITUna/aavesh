@@ -194,18 +194,28 @@ export class PCBSceneEngine {
     const width = container.clientWidth || window.innerWidth
     const height = container.clientHeight || window.innerHeight
 
-    // Cinematic perspective camera with responsive viewport scaling
+    // Cinematic perspective camera with responsive viewport scaling & device-specific view offset
     let initFov = 34
-    let initPos = [5.8, 4.8, 7.2]
+    let initPos = [12.6, 10.4, 15.6]
     if (width < 640) {
-      initFov = 44
-      initPos = [7.2, 6.2, 9.0]
+      initFov = 42
+      initPos = [12.5, 10.5, 15.5]
     } else if (width < 1024) {
       initFov = 38
-      initPos = [6.5, 5.5, 8.0]
+      initPos = [12.2, 10.2, 15.2]
     }
 
     this.camera = new THREE.PerspectiveCamera(initFov, width / height, 0.1, 100)
+    if (width < 640) {
+      this.camera.setViewOffset(width, height, 0, -Math.round(height * 0.36), width, height)
+    } else if (width < 1024) {
+      const isPortrait = height > width
+      const xOff = isPortrait ? -Math.round(width * 0.12) : -Math.round(width * 0.13)
+      const yOff = isPortrait ? -Math.round(height * 0.24) : 0
+      this.camera.setViewOffset(width, height, xOff, yOff, width, height)
+    } else {
+      this.camera.setViewOffset(width, height, -Math.round(width * 0.13), 0, width, height)
+    }
     this.camera.position.set(...initPos)
 
     // High-performance, razor-sharp WebGL Renderer
@@ -1017,14 +1027,22 @@ export class PCBSceneEngine {
       const h = this.container.clientHeight || window.innerHeight
       this.camera.aspect = w / h
       if (w < 640) {
-        this.camera.fov = 48
-        this.camera.position.set(7.5, 6.5, 9.5)
-      } else if (w < 1024) {
+        // Mobile phone: offset down to bottom half so text on top is 100% clean and readable
+        this.camera.setViewOffset(w, h, 0, -Math.round(h * 0.36), w, h)
         this.camera.fov = 42
-        this.camera.position.set(6.8, 5.8, 8.6)
-      } else {
+        this.camera.position.set(12.5, 10.5, 15.5)
+      } else if (w < 1024) {
+        const isPortrait = h > w
+        const xOff = isPortrait ? -Math.round(w * 0.12) : -Math.round(w * 0.13)
+        const yOff = isPortrait ? -Math.round(h * 0.24) : 0
+        this.camera.setViewOffset(w, h, xOff, yOff, w, h)
         this.camera.fov = 38
-        this.camera.position.set(6.2, 5.2, 7.8)
+        this.camera.position.set(12.2, 10.2, 15.2)
+      } else {
+        // Desktop / wide screens: offset comfortably to the right while keeping completely inside frame
+        this.camera.setViewOffset(w, h, -Math.round(w * 0.13), 0, w, h)
+        this.camera.fov = 34
+        this.camera.position.set(12.6, 10.4, 15.6)
       }
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(w, h)
@@ -1090,13 +1108,10 @@ export class PCBSceneEngine {
       }
     }
 
-    const el = this.renderer.domElement
-
     if (hoveringLogo) {
       this.isMeshHovered = true
       if (!this.isLogoHovered) {
         this.isLogoHovered = true
-        el.style.cursor = "pointer"
         if (this.logoMaterial) {
           this.logoMaterial.emissiveIntensity = 0.35
         }
@@ -1104,12 +1119,9 @@ export class PCBSceneEngine {
     } else {
       if (this.isLogoHovered) {
         this.isLogoHovered = false
-        el.style.cursor = foundData ? "pointer" : "default"
         if (this.logoMaterial) {
           this.logoMaterial.emissiveIntensity = 0.1
         }
-      } else {
-        el.style.cursor = foundData ? "pointer" : "default"
       }
     }
 

@@ -22,8 +22,9 @@
 }
 
 .navbar-container {
-  width: min(calc(100% - var(--page-pad) * 2), var(--container));
-  margin-inline: auto;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: clamp(1.5rem, 5vw, 6rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -218,23 +219,53 @@
   color: #38bdf8;
 }
 
-/* Mobile Drawer */
+/* Mobile Drawer Glassmorphism */
+.navbar-root.is-menu-open {
+  height: 100vh;
+  height: 100dvh;
+  bottom: 0;
+  background: rgba(2, 6, 14, 0.96) !important;
+  backdrop-filter: blur(52px) saturate(220%) !important;
+  -webkit-backdrop-filter: blur(52px) saturate(220%) !important;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.18);
+}
+
 .navbar-mobile-drawer {
-  position: fixed;
+  position: absolute;
   top: 4.8rem;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(2, 4, 7, 0.98);
-  backdrop-filter: blur(20px);
-  padding: 2rem var(--page-pad);
+  height: calc(100vh - 4.8rem);
+  height: calc(100dvh - 4.8rem);
+  background: linear-gradient(180deg, rgba(3, 8, 18, 0.94) 0%, rgba(2, 5, 12, 0.97) 100%);
+  backdrop-filter: blur(52px) saturate(220%);
+  -webkit-backdrop-filter: blur(52px) saturate(220%);
+  border-top: 1px solid rgba(0, 240, 255, 0.15);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 1.5rem clamp(1.2rem, 5vw, 2.5rem);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
   transform: translateY(-100%);
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
   z-index: 99;
+}
+
+@media (max-width: 960px) {
+  .navbar-root {
+    backdrop-filter: blur(48px) saturate(220%);
+    -webkit-backdrop-filter: blur(48px) saturate(220%);
+    background: rgba(2, 6, 14, 0.86);
+  }
+
+  .navbar-root.is-scrolled {
+    backdrop-filter: blur(52px) saturate(220%);
+    -webkit-backdrop-filter: blur(52px) saturate(220%);
+    background: rgba(2, 6, 14, 0.94);
+  }
 }
 
 .navbar-mobile-drawer.is-active {
@@ -246,54 +277,64 @@
 .navbar-mobile-links {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .navbar-mobile-link {
   font-family: var(--display, 'AAVESH Display', sans-serif);
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 600;
+  letter-spacing: 0.05em;
   color: #cbd5e1;
   text-decoration: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.9rem 1.2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .navbar-mobile-link:hover {
   color: #00f0ff;
-  background: rgba(0, 240, 255, 0.04);
-  padding-left: 1.1rem;
+  background: rgba(0, 240, 255, 0.08);
+  border-color: rgba(0, 240, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 240, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
 }
 
 .navbar-mobile-link.is-active {
   color: #00f0ff;
-  background: rgba(0, 240, 255, 0.08);
-  border-left: 3px solid #00f0ff;
-  box-shadow: inset 0 0 12px rgba(0, 240, 255, 0.06);
-  padding-left: 1.1rem;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.15) 0%, rgba(56, 189, 248, 0.05) 100%);
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .navbar-mobile-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #00f0ff;
-  box-shadow: 0 0 8px #00f0ff;
+  box-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
   display: inline-block;
 }
 
 .navbar-mobile-contact {
   color: #38bdf8 !important;
   font-family: var(--mono, 'Aavesh', sans-serif) !important;
-  font-size: 1.05rem !important;
-  margin-top: 0.75rem;
-  border-bottom: none !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  margin-top: 0.5rem;
+  background: rgba(56, 189, 248, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* ==========================================================================
@@ -337,6 +378,12 @@
   pointer-events: auto;
   width: 100%;
   height: 100%;
+}
+
+@media (max-width: 768px) {
+  .hero-3d-container {
+    display: none !important;
+  }
 }
 
 .hero-canvas-container {
@@ -387,8 +434,9 @@
 
 /* Main Hero Content Layout */
 .hero-main-container {
-  width: min(calc(100% - var(--page-pad) * 2), var(--container));
-  margin-inline: auto;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: clamp(1.5rem, 5vw, 6rem);
   flex: 1;
   display: flex;
   align-items: center;
@@ -399,7 +447,7 @@
 }
 
 .hero-content-wrapper {
-  max-width: 44rem;
+  max-width: 36rem;
   display: flex;
   flex-direction: column;
   pointer-events: none;
@@ -475,7 +523,7 @@
 .hero-headline {
   margin: 0 0 1.6rem 0;
   font-family: var(--display, 'AAVESH Display', sans-serif);
-  font-size: clamp(2.3rem, 6.8vw, 6.2rem);
+  font-size: clamp(2.3rem, 5.4vw, 5.2rem);
   font-weight: 700;
   letter-spacing: -0.055em;
   line-height: 0.94;
@@ -607,8 +655,13 @@
 
 @media (max-width: 640px) {
   .hero-telemetry-strip {
-    flex-wrap: wrap;
-    gap: 0.8rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.25rem;
+    max-width: 100%;
+  }
+  .telemetry-separator {
+    display: none;
   }
 }
 
@@ -642,8 +695,9 @@
 
 /* Hero Footer / Scroll Indicator */
 .hero-footer-bar {
-  width: min(calc(100% - var(--page-pad) * 2), var(--container));
-  margin-inline: auto;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: clamp(1.5rem, 5vw, 6rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -690,6 +744,24 @@
 @keyframes scrollPulse {
   0% { left: -100%; }
   60%, 100% { left: 100%; }
+}
+
+@media (max-width: 768px) {
+  .hero-scroll-indicator {
+    display: none !important;
+  }
+
+  .hero-footer-bar {
+    padding-block: 1rem;
+    font-size: 0.6rem;
+  }
+
+  .pcb-theme-badge {
+    bottom: 0.8rem !important;
+    right: 0.8rem !important;
+    font-size: 0.58rem !important;
+    padding: 0.25rem 0.55rem !important;
+  }
 }
 
 /* ==========================================================================

@@ -1,0 +1,259 @@
+/* ==========================================================================
+   AAVESH — Lightweight Mobile & Tablet Hero
+   Self-playing continuous text animation loop reproducing user specifications
+   ========================================================================== */
+
+:root {
+  --mobile-hero-bg: #020407;
+  --mobile-hero-fg: #f8fafc;
+  --mobile-hero-accent: #00e5ff;
+  --mobile-hero-muted: #94a3b8;
+}
+
+.mobile-hero-root {
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(env(safe-area-inset-top, 0px), 5rem) clamp(1rem, 4vw, 2rem) max(env(safe-area-inset-bottom, 0px), 3rem);
+  background: var(--mobile-hero-bg);
+  color: var(--mobile-hero-fg);
+  font-family: var(--body, "Inter", system-ui, -apple-system, sans-serif);
+  position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ambient Wandering Orbs */
+.mobile-hero-orb {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--mobile-hero-accent) 0%, transparent 62%);
+  opacity: 0.14;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 1;
+}
+
+.mobile-hero-orb.orb-a {
+  top: -30vmax;
+  left: -25vmax;
+}
+
+.mobile-hero-orb.orb-b {
+  bottom: -35vmax;
+  right: -30vmax;
+  opacity: 0.1;
+}
+
+/* Cyber grid texture */
+.mobile-hero-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(rgba(0, 229, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.15) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+  z-index: 1;
+}
+
+/* Main Content Container */
+.mobile-hero-main {
+  position: relative;
+  text-align: center;
+  padding: clamp(12px, 3vw, 24px);
+  max-width: 1100px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+/* Eyebrow badge */
+.mobile-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  font-family: var(--mono, "Aavesh", monospace);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mobile-hero-accent);
+  margin-bottom: 1.25rem;
+}
+
+.mobile-hero-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mobile-hero-accent);
+  box-shadow: 0 0 8px var(--mobile-hero-accent);
+}
+
+/* Title Headline */
+.mobile-hero-title {
+  margin: 0;
+  font-family: var(--display, "AAVESH Display", sans-serif);
+  font-size: clamp(2.6rem, 11vw, 5.5rem);
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: var(--mobile-hero-fg);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.28em;
+  touch-action: none; /* enables tap & drag hop across characters */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mobile-hero-word {
+  display: inline-flex;
+  white-space: nowrap;
+  align-items: center;
+  will-change: transform;
+}
+
+.mobile-hero-char-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mobile-hero-char {
+  display: inline-block;
+  will-change: transform, color, opacity;
+  cursor: default;
+}
+
+/* Accent word highlight */
+.mobile-hero-word--accent .mobile-hero-char {
+  color: var(--mobile-hero-accent);
+  text-shadow: 0 0 20px rgba(0, 229, 255, 0.35);
+}
+
+/* Accent shape blob */
+.mobile-hero-blob {
+  display: inline-block;
+  width: 0.42em;
+  height: 0.42em;
+  margin: 0 0.02em;
+  background: var(--mobile-hero-accent);
+  border-radius: 50% 50% 50% 12%;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.85);
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+/* Subtitle */
+.mobile-hero-sub {
+  margin: 24px auto 0;
+  max-width: 34em;
+  color: var(--mobile-hero-muted);
+  font-family: var(--body, "Aavesh", sans-serif);
+  font-size: clamp(0.95rem, 2.5vw, 1.25rem);
+  line-height: 1.5;
+  will-change: transform, opacity;
+}
+
+/* CTA buttons */
+.mobile-hero-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+  will-change: transform, opacity;
+  width: 100%;
+}
+
+.mobile-hero-btn-primary {
+  min-height: 48px;
+  padding: 14px 28px;
+  font-family: var(--mono, "Aavesh", monospace);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #020407;
+  background: var(--mobile-hero-accent);
+  border: 1px solid var(--mobile-hero-accent);
+  border-radius: 999px;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.4);
+  touch-action: manipulation;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-hero-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.mobile-hero-btn-replay {
+  min-height: 48px;
+  padding: 14px 22px;
+  font-family: var(--mono, "Aavesh", monospace);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mobile-hero-muted);
+  background: transparent;
+  border: 1px solid var(--mobile-hero-muted);
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  touch-action: manipulation;
+  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.mobile-hero-btn-replay:hover,
+.mobile-hero-btn-replay:active {
+  border-color: var(--mobile-hero-accent);
+  color: var(--mobile-hero-accent);
+  transform: scale(0.97);
+}
+
+.mobile-hero-btn-replay svg {
+  transition: transform 0.3s ease;
+}
+
+.mobile-hero-btn-replay:hover svg {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 440px) {
+  .mobile-hero-cta {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .mobile-hero-btn-primary,
+  .mobile-hero-btn-replay {
+    width: 100%;
+  }
+}

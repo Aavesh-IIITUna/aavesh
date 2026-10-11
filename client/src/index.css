@@ -1,12 +1,25 @@
 @import "./styles/hero.css";
 @import "./styles/showcase.css";
+@import "./styles/aavesh-cursor.css";
+@import "./styles/mobile-hero.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @font-face {
+  font-family: "Aavesh";
+  src: url("/fonts/Aavesh-Regular.woff2") format("woff2"),
+       url("/fonts/Aavesh-Regular.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Alias "AAVESH Display" directly to authentic Aavesh typeface */
+@font-face {
   font-family: "AAVESH Display";
-  src: url("/fonts/AAVESH-Display-Bold.otf") format("opentype");
+  src: url("/fonts/Aavesh-Regular.woff2") format("woff2"),
+       url("/fonts/Aavesh-Regular.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -15,15 +28,6 @@
 @font-face {
   font-family: "AAVESH Devanagari";
   src: url("/fonts/AAVESH-Devanagari-Regular.ttf") format("truetype");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Aavesh";
-  src: url("/fonts/Aavesh-Regular.woff2") format("woff2"),
-       url("/fonts/Aavesh-Regular.ttf") format("truetype");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -44,20 +48,29 @@
   --border: #24303b;
   --border-subtle: #151e27;
   --focus: #70c7ff;
-  --display: "AAVESH Display", "Aavesh", sans-serif;
-  --body: "Aavesh", "AAVESH Display", sans-serif;
-  --mono: "Aavesh", "AAVESH Display", monospace;
-  --aavesh-display: "AAVESH Display", "Aavesh", sans-serif;
-  --aavesh-devanagari: "AAVESH Devanagari", sans-serif;
-  --container: 1280px;
-  --page-pad: clamp(1.25rem, 4vw, 3rem);
-  font-family: var(--body);
+  --display: "Aavesh", sans-serif;
+  --body: "Aavesh", sans-serif;
+  --mono: "Aavesh", monospace;
+  --aavesh-display: "Aavesh", sans-serif;
+  --aavesh-devanagari: "AAVESH Devanagari", "Aavesh", sans-serif;
+  --container: 1680px;
+  --page-pad: clamp(1.25rem, 3.5vw, 4rem);
+  font-family: "Aavesh", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
-* {
+@media (min-width: 1920px) {
+  :root {
+    --container: 1840px;
+  }
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+  font-family: "Aavesh", sans-serif;
 }
 
 html {

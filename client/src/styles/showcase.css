@@ -78,44 +78,55 @@
 }
 
 /* ==========================================================================
-   PHONE ONLY: Sleek Thin Top Progress Bar
+   MOBILE ONLY: Thin Sidebar Progress Indicator (matches active section color)
    ========================================================================== */
-.showcase-phone-bar {
+.showcase-mobile-sidebar {
   display: none;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 45;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.showcase-phone-bar-fill {
-  height: 100%;
-  transition: width 0.15s ease-out, background-color 0.3s ease;
-}
-
-.showcase-phone-meta {
-  position: absolute;
-  top: 6px;
-  left: 1rem;
-  right: 1rem;
-  display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  font-family: var(--mono);
-  font-size: 0.62rem;
-  color: var(--text-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  gap: 0.65rem;
   pointer-events: none;
 }
 
-@media (max-width: 767px) {
-  .showcase-phone-bar {
-    display: block;
+@media (max-width: 768px) {
+  .showcase-mobile-sidebar {
+    display: flex;
   }
+}
+
+.showcase-mobile-sidebar-track {
+  width: 3px;
+  height: clamp(140px, 30vh, 220px);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.showcase-mobile-sidebar-fill {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-radius: 999px;
+  transition: height 0.15s ease-out, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.showcase-mobile-sidebar-val {
+  font-family: var(--mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  transition: color 0.3s ease;
+  text-shadow: 0 0 8px currentColor;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
 }
 
 /* ==========================================================================
@@ -192,6 +203,30 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   transition: all 0.2s ease;
+}
+
+/* ==========================================================================
+   Centered SloshGauge
+   ========================================================================== */
+.showcase-gauge-center {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.showcase-slosh-gauge {
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.75),
+    0 0 40px rgba(0, 229, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: box-shadow 0.3s ease;
 }
 
 /* ==========================================================================
@@ -399,51 +434,61 @@
    Smooth Threshold-Based Stage Cards
    Transitions shrink into central loading bar and expand out smoothly!
    ========================================================================== */
+/* ==========================================================================
+   Smooth Threshold-Based Stage Cards
+   Transitions emerge cleanly from the central SloshGauge outward
+   ========================================================================== */
 .showcase-stage-card {
   display: flex;
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  opacity: 0;
-  transform: scale(0.25);
-  pointer-events: none;
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: center center;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
 
-.showcase-stage-card.is-active {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-.showcase-stage-card.is-inactive {
-  opacity: 0;
-  transform: scale(0.25);
-  pointer-events: none;
-}
-
-/* Left Orbit Stage (About) */
-.showcase-stage-card--about {
-  grid-column: 1 / 2;
-  grid-row: 1 / 2;
-}
-
-/* Right Orbit Stage (Domains) */
-.showcase-stage-card--domains {
-  grid-column: 3 / 4;
-  grid-row: 1 / 2;
-}
-
-/* Sponsors Stages (Stage 3) */
+/* Left Orbit Stage (About & Sponsors-Left): Emerges from SloshGauge toward the left */
+.showcase-stage-card--about,
 .showcase-stage-card--sponsors-left {
   grid-column: 1 / 2;
   grid-row: 1 / 2;
+  transform-origin: right center;
 }
 
+.showcase-stage-card--about.is-inactive,
+.showcase-stage-card--sponsors-left.is-inactive {
+  opacity: 0;
+  transform: translateX(90px) scale(0.68);
+  pointer-events: none;
+}
+
+.showcase-stage-card--about.is-active,
+.showcase-stage-card--sponsors-left.is-active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Right Orbit Stage (Domains & Sponsors-Right): Emerges from SloshGauge toward the right */
+.showcase-stage-card--domains,
 .showcase-stage-card--sponsors-right {
   grid-column: 3 / 4;
   grid-row: 1 / 2;
+  transform-origin: left center;
+}
+
+.showcase-stage-card--domains.is-inactive,
+.showcase-stage-card--sponsors-right.is-inactive {
+  opacity: 0;
+  transform: translateX(-90px) scale(0.68);
+  pointer-events: none;
+}
+
+.showcase-stage-card--domains.is-active,
+.showcase-stage-card--sponsors-right.is-active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
 }
 
 @media (max-width: 1024px) {
@@ -452,10 +497,68 @@
     grid-row: 2 / 3 !important;
     max-width: 620px;
     margin: 0 auto;
+    transform-origin: center top !important;
+  }
+
+  .showcase-stage-card--about.is-inactive,
+  .showcase-stage-card--domains.is-inactive,
+  .showcase-stage-card--sponsors-left.is-inactive,
+  .showcase-stage-card--sponsors-right.is-inactive {
+    transform: translateY(-35px) scale(0.85) !important;
+    opacity: 0 !important;
+  }
+
+  .showcase-stage-card--about.is-active,
+  .showcase-stage-card--domains.is-active,
+  .showcase-stage-card--sponsors-left.is-active,
+  .showcase-stage-card--sponsors-right.is-active {
+    transform: translateY(0) scale(1) !important;
+    opacity: 1 !important;
   }
 
   .showcase-stage-card--sponsors-right {
     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .showcase-gauge-center {
+    display: none !important;
+  }
+
+  .showcase-stage-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 4.8rem 1.6rem 2.2rem 1.2rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 0 !important;
+  }
+
+  .showcase-stage-card {
+    grid-column: unset !important;
+    grid-row: unset !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .showcase-stage-card.is-inactive {
+    display: none !important;
+  }
+
+  .showcase-stage-card.is-active {
+    display: flex !important;
+    position: relative !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .showcase-glass-panel {
+    padding: 1.25rem 1.15rem !important;
+    border-radius: 16px !important;
   }
 }
 
@@ -481,7 +584,20 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 18, 56, 0.6), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 119, 255, 0.7), transparent);
+}
+
+.showcase-glass-panel--blue::after {
+  background: linear-gradient(90deg, transparent, rgba(0, 119, 255, 0.9), transparent);
+}
+
+.showcase-glass-panel--white::after {
+  background: linear-gradient(90deg, transparent, rgba(245, 245, 245, 0.9), transparent);
+}
+
+.showcase-glass-panel--orange::after,
+.showcase-glass-panel--copper::after {
+  background: linear-gradient(90deg, transparent, rgba(234, 88, 12, 0.9), transparent);
 }
 
 .showcase-glass-panel--gold::after {

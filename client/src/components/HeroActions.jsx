@@ -3,7 +3,7 @@ import { ArrowRight, Terminal } from "lucide-react"
 export default function HeroActions() {
   return (
     <div className="hero-actions-group" id="hero-actions">
-      <a className="hero-btn-primary" href="#projects">
+      <a className="hero-btn-primary" href="#events">
         <span>Our Work</span>
         <ArrowRight aria-hidden="true" className="hero-btn-icon" size={17} />
       </a>

@@ -71,28 +71,28 @@ function createPCBSilkscreenTexture() {
     ctx.beginPath();
     ctx.arc(670, 460, 12, 0, Math.PI * 2);
     ctx.fill();
-    ctx.font = "bold 24px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "bold 24px 'Aavesh', sans-serif";
     ctx.fillText('PIN 1', 620, 435);
 
     // Main Board Identification Silkscreen
     ctx.fillStyle = '#f8fafc';
-    ctx.font = "bold 44px 'AAVESH Display', sans-serif";
+    ctx.font = "bold 44px 'Aavesh', sans-serif";
     ctx.letterSpacing = '6px';
     ctx.fillText('AAVESH // IIIT UNA', 120, 240);
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = "600 24px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "600 24px 'Aavesh', sans-serif";
     ctx.letterSpacing = '3px';
     ctx.fillText('ELECTRONICS & TECHNOLOGY SOCIETY · FOUNDRY REV 3.4', 120, 280);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = "500 20px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "500 20px 'Aavesh', sans-serif";
     ctx.letterSpacing = '2px';
     ctx.fillText('LAYER: 4-LAYER FR4 TG170 · ENIG GOLD FINISH · IMPEDANCE CONTROLLED', 120, 312);
 
     // Silkscreen component designators
     ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-    ctx.font = "bold 22px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "bold 22px 'Aavesh', sans-serif";
     ctx.fillText('U1 [SOC-M7 240MHz]', 720, 470);
     ctx.fillText('U2 [SPI-FLASH]', 380, 720);
     ctx.fillText('Y1 [16.000MHz]', 1450, 410);
@@ -108,7 +108,7 @@ function createPCBSilkscreenTexture() {
     ctx.fillText('ACT', 1760, 1420);
 
     // GPIO Header J2 Pinout markings
-    ctx.font = "bold 18px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "bold 18px 'Aavesh', sans-serif";
     ctx.fillStyle = '#38bdf8';
     const pinLabels = [
       '3V3', 'GND', 'D0', 'D1', 'D2', 'D3', 'D4', 'D5',
@@ -131,7 +131,7 @@ function createPCBSilkscreenTexture() {
       ctx.arc(x, y, 8, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#cbd5e1';
-      ctx.font = "bold 18px 'AAVESH Display', 'Aavesh', sans-serif";
+      ctx.font = "bold 18px 'Aavesh', sans-serif";
       ctx.fillText(name, x + 24, y + 6);
     };
     drawTestPoint(1460, 820, 'TP1 [CLK]');
@@ -144,7 +144,7 @@ function createPCBSilkscreenTexture() {
     ctx.lineWidth = 2;
     ctx.strokeRect(120, 1370, 220, 60);
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = "bold 20px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "bold 20px 'Aavesh', sans-serif";
     ctx.fillText('Pb-FREE · RoHS', 140, 1408);
 
     ctx.strokeRect(360, 1370, 180, 60);

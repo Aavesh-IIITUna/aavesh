@@ -1,0 +1,194 @@
+/* ==========================================================================
+   AAVESH Custom Cursor System — Pixel-Accurate Reference Implementation
+   AAVESH Technical Society · IIIT Una
+   ========================================================================== */
+
+:root {
+  --aavesh-cursor-navy: #080D18;
+  --aavesh-cursor-blue: #85C0FF;
+  --aavesh-cursor-cyan: #C4EEFF;
+  --aavesh-cursor-violet: #DDD5FE;
+  --aavesh-cursor-pink: #F3EEFE;
+  --aavesh-cursor-glow-cyan: rgba(133, 192, 255, 0.45);
+  --aavesh-cursor-glow-pink: rgba(221, 213, 254, 0.45);
+  --aavesh-cursor-pulse: #EDE8FE;
+}
+
+/* Hide native cursor globally when custom cursor is active on fine-pointer devices */
+@media (pointer: fine) and (hover: hover) {
+  html.aavesh-cursor-active,
+  html.aavesh-cursor-active *,
+  html.aavesh-cursor-active *::before,
+  html.aavesh-cursor-active *::after {
+    cursor: none !important;
+  }
+}
+
+/* Cursor root overlay */
+.aavesh-cursor-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 100000;
+  will-change: transform, opacity;
+  opacity: 0;
+  transition: opacity 0.16s ease-out;
+}
+
+.aavesh-cursor-container.is-visible {
+  opacity: 1;
+}
+
+/* Internal hotspot offset wrapper */
+.aavesh-cursor-hotspot {
+  position: relative;
+  display: block;
+  pointer-events: none;
+  transform-origin: 0 0;
+  transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Hotspot alignments */
+.aavesh-cursor-hotspot.align-arrow {
+  transform: translate3d(-2px, -2px, 0);
+}
+
+.aavesh-cursor-hotspot.align-center {
+  transform: translate3d(-50%, -50%, 0);
+}
+
+/* SVG Rendering and Bloom Filters */
+.aavesh-cursor-svg {
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 0 4px var(--aavesh-cursor-glow-cyan))
+          drop-shadow(0 0 9px var(--aavesh-cursor-glow-pink));
+  transition: filter 0.16s ease-out, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Click state pulse */
+.aavesh-cursor-container.is-clicked .aavesh-cursor-svg {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.95))
+          drop-shadow(0 0 14px var(--aavesh-cursor-pulse))
+          drop-shadow(0 0 22px rgba(221, 213, 254, 0.65));
+  transform: scale(0.96);
+}
+
+/* Concentric signal hover ring */
+.aavesh-signal-ring {
+  opacity: 0;
+  transform-origin: 11px 12px;
+  transform: scale(0.7);
+  transition: opacity 0.16s ease-out, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aavesh-cursor-container.state-hover .aavesh-signal-ring,
+.aavesh-cursor-container.state-link .aavesh-signal-ring {
+  opacity: 0.85;
+  transform: scale(1);
+}
+
+/* Subtle secondary outer signal ring */
+.aavesh-signal-ring-outer {
+  opacity: 0;
+  transform-origin: 11px 12px;
+  transform: scale(0.6);
+  transition: opacity 0.22s ease-out, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.aavesh-cursor-container.state-hover .aavesh-signal-ring-outer {
+  opacity: 0.45;
+  transform: scale(1);
+}
+
+/* Circuit node glow animation */
+.aavesh-circuit-node {
+  transform-origin: 11.2px 18.9px;
+  transition: transform 0.18s ease-out, fill 0.18s ease-out;
+}
+
+.aavesh-cursor-container.state-hover .aavesh-circuit-node {
+  transform: scale(1.15);
+}
+
+.aavesh-cursor-container.is-clicked .aavesh-circuit-node {
+  transform: scale(1.3);
+}
+
+/* Interactive click pulse ripple wave */
+.aavesh-click-ripple {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  margin-top: -16px;
+  margin-left: -16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--aavesh-cursor-cyan);
+  box-shadow: 0 0 12px var(--aavesh-cursor-glow-cyan);
+  pointer-events: none;
+  z-index: 99998;
+  animation: aaveshRippleExpand 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes aaveshRippleExpand {
+  0% {
+    transform: scale(0.3);
+    opacity: 1;
+    border-color: #ffffff;
+    box-shadow: 0 0 16px var(--aavesh-cursor-pulse);
+  }
+  50% {
+    border-color: var(--aavesh-cursor-pink);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+    border-color: var(--aavesh-cursor-blue);
+    box-shadow: 0 0 4px transparent;
+  }
+}
+
+/* Technical Spinner for WAIT / LOADING */
+@keyframes aaveshSpinnerRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.aavesh-spinner-rotor {
+  transform-origin: 14px 14px;
+  animation: aaveshSpinnerRotate 1.1s linear infinite;
+}
+
+/* Technical Marquee animation for SELECTION */
+@keyframes aaveshMarqueeDash {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+.aavesh-selection-box {
+  animation: aaveshMarqueeDash 0.8s linear infinite;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .aavesh-cursor-container,
+  .aavesh-cursor-hotspot,
+  .aavesh-cursor-svg,
+  .aavesh-signal-ring,
+  .aavesh-circuit-node,
+  .aavesh-spinner-rotor,
+  .aavesh-selection-box {
+    animation: none !important;
+    transition: none !important;
+  }
+  .aavesh-click-ripple {
+    display: none !important;
+  }
+}

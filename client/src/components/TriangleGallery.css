@@ -1,0 +1,463 @@
+/* TriangleGallery.css - Cyber / Sci-Fi Interlocking Geometric Roster */
+
+:root {
+  --tg-font-num: 'Space Grotesk', 'Rajdhani', -apple-system, sans-serif;
+  --tg-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --tg-text-muted: rgba(255, 255, 255, 0.65);
+  --tg-accent: #00f0ff;
+  --tg-accent-glow: rgba(0, 240, 255, 0.45);
+}
+
+/* Theme Presets */
+.triangle-gallery[data-theme='crimson'] {
+  --tg-accent: #ff2a4a;
+  --tg-accent-glow: rgba(255, 42, 74, 0.45);
+}
+
+.triangle-gallery[data-theme='cyan'] {
+  --tg-accent: #00f0ff;
+  --tg-accent-glow: rgba(0, 240, 255, 0.45);
+}
+
+.triangle-gallery[data-theme='amber'] {
+  --tg-accent: #ffaa00;
+  --tg-accent-glow: rgba(255, 170, 0, 0.45);
+}
+
+.triangle-gallery[data-theme='emerald'] {
+  --tg-accent: #00ff88;
+  --tg-accent-glow: rgba(0, 255, 136, 0.45);
+}
+
+.triangle-gallery[data-theme='violet'] {
+  --tg-accent: #bf55ec;
+  --tg-accent-glow: rgba(191, 85, 236, 0.45);
+}
+
+/* Container */
+.triangle-gallery {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 0.5rem;
+  box-sizing: border-box;
+  user-select: none;
+  --tg-card-w: 250px;
+  --tg-card-h: 300px;
+  --tg-gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .triangle-gallery {
+    --tg-card-w: 210px;
+    --tg-card-h: 255px;
+    --tg-gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .triangle-gallery {
+    --tg-card-w: 165px;
+    --tg-card-h: 205px;
+    --tg-gap: 5px;
+  }
+}
+
+/* Rows Container with Smooth Horizontal Scroll */
+.tg-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 30px 16px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  gap: 24px;
+}
+
+.tg-rows::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual Row */
+.tg-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  white-space: nowrap;
+}
+
+/* Tessellation: adjacent cards interlock horizontally */
+.tg-row .tg-card + .tg-card {
+  margin-left: calc(-1 * (var(--tg-card-w) / 2) + var(--tg-gap));
+}
+
+/* Dual Mode: distinct rows with clean vertical spacing */
+.layout-dual .tg-row-bottom {
+  margin-top: 4px;
+  z-index: 2;
+}
+
+/* Triangle Card */
+.tg-card {
+  position: relative;
+  width: var(--tg-card-w);
+  height: var(--tg-card-h);
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              z-index 0.4s ease;
+  filter: grayscale(0.8) brightness(0.7) contrast(1.15);
+  z-index: 1;
+}
+
+.tg-card:hover,
+.tg-card.tg-spotlight,
+.tg-card.tg-active {
+  filter: grayscale(0) brightness(1.15) contrast(1.15);
+  z-index: 25;
+  transform: translateY(-8px) scale(1.05);
+}
+
+.tg-card.tg-active {
+  transform: translateY(-10px) scale(1.08);
+}
+
+/* Card Inner & Shapes */
+.tg-card-inner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #070c17;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.tg-up .tg-card-inner {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  -webkit-clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.tg-down .tg-card-inner {
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+  -webkit-clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+}
+
+/* Background Portrait */
+.tg-img-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.tg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.tg-card:hover .tg-img,
+.tg-card.tg-spotlight .tg-img {
+  transform: scale(1.09);
+}
+
+/* Tech Scanline Overlay */
+.tg-pop-texture {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.35) 0px,
+    rgba(0, 0, 0, 0.35) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  opacity: 0.65;
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+
+/* Vignette Shadow */
+.tg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 20%, rgba(5, 8, 16, 0.88) 90%),
+              linear-gradient(to bottom, rgba(5, 8, 16, 0.5) 0%, transparent 40%, rgba(5, 8, 16, 0.92) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Razor-sharp Vector Border */
+.tg-border-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  overflow: visible;
+}
+
+.tg-border-path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 0.3s ease, filter 0.3s ease, stroke-width 0.3s ease;
+}
+
+.tg-card:hover .tg-border-path,
+.tg-card.tg-spotlight .tg-border-path,
+.tg-card.tg-active .tg-border-path {
+  stroke: var(--tg-accent);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 12px var(--tg-accent-glow));
+}
+
+/* Content Layout: Upward Triangle */
+.tg-up .tg-meta-top {
+  z-index: 2;
+  padding-top: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.tg-up .tg-meta-bottom {
+  z-index: 2;
+  padding: 0 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Content Layout: Downward Triangle */
+.tg-down .tg-meta-top {
+  z-index: 2;
+  padding: 16px 18px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tg-down .tg-meta-bottom {
+  z-index: 2;
+  padding-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* Apex Unit Code */
+.tg-apex-tag {
+  font-family: var(--tg-font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #fff;
+  background: rgba(6, 10, 18, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 2px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+  transition: border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tg-card:hover .tg-apex-tag,
+.tg-card.tg-spotlight .tg-apex-tag {
+  border-color: var(--tg-accent);
+  color: var(--tg-accent);
+  box-shadow: 0 0 10px var(--tg-accent-glow);
+}
+
+/* Badge & Text Typography */
+.tg-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2px;
+  width: 100%;
+}
+
+.tg-badge-label {
+  font-family: var(--tg-font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--tg-accent);
+  text-transform: uppercase;
+  margin-bottom: 1px;
+  opacity: 0.95;
+}
+
+.tg-badge-title {
+  font-family: var(--tg-font-num);
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+  max-width: 86%;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+
+.tg-rank-sub {
+  font-family: var(--tg-font-mono);
+  font-size: 0.5rem;
+  color: var(--tg-text-muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.tg-rank-num {
+  font-family: var(--tg-font-num);
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--tg-accent);
+  text-shadow: 0 0 12px var(--tg-accent-glow);
+  margin-top: 1px;
+}
+
+.tg-subtag {
+  font-family: var(--tg-font-mono);
+  font-size: 0.54rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1px 7px;
+  border-radius: 2px;
+  margin-top: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  max-width: 82%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Modal Detail Inspector */
+.tg-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.tg-modal.tg-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tg-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 6, 12, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+}
+
+.tg-modal-panel {
+  position: relative;
+  z-index: 10;
+  max-width: 680px;
+  width: 100%;
+  background: #080d17;
+  border: 1px solid var(--tg-accent);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.95), 0 0 30px var(--tg-accent-glow), inset 0 0 30px rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  padding: 2.2rem;
+  box-sizing: border-box;
+  transform: scale(0.92) translateY(12px);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.tg-modal.tg-open .tg-modal-panel {
+  transform: scale(1) translateY(0);
+}
+
+.tg-modal-close {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 20;
+}
+
+.tg-modal-close:hover {
+  background: var(--tg-accent);
+  color: #000;
+  border-color: var(--tg-accent);
+  transform: rotate(90deg);
+}
+
+.tg-modal-content-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .tg-modal-content-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+}

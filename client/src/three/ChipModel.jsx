@@ -134,7 +134,7 @@ function createAaveshChipTexture() {
     textGold.addColorStop(0.75, '#eab308');
     textGold.addColorStop(1, '#fef08a');
     ctx.fillStyle = textGold;
-    ctx.font = "900 120px 'AAVESH Display', sans-serif";
+    ctx.font = "900 120px 'Aavesh', sans-serif";
     ctx.fillText('A A V E S H', 1024, 1170);
 
     // White micro-stroke on brand name for extreme legibility
@@ -144,25 +144,25 @@ function createAaveshChipTexture() {
 
     // 4. Sub-title
     ctx.fillStyle = '#38bdf8';
-    ctx.font = "700 52px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "700 52px 'Aavesh', sans-serif";
     ctx.fillText('IIIT UNA · HARDWARE FOUNDRY', 1024, 1290);
 
     // 5. Architecture Specs
     ctx.fillStyle = '#f8fafc';
-    ctx.font = "600 44px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "600 44px 'Aavesh', sans-serif";
     ctx.fillText('SOC-M7 // 64-BIT DUAL CORE RISC-V', 1024, 1390);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = "500 36px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "500 36px 'Aavesh', sans-serif";
     ctx.fillText('ELECTRONICS · EMBEDDED · AI/ML · ROBOTICS', 1024, 1480);
 
     ctx.fillStyle = '#64748b';
-    ctx.font = "500 30px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "500 30px 'Aavesh', sans-serif";
     ctx.fillText('240MHz PLL · 32MB PSRAM · 16MB SPI FLASH', 1024, 1560);
 
     // 6. Serial & Fab code
     ctx.textAlign = 'left';
-    ctx.font = "600 34px 'AAVESH Display', 'Aavesh', sans-serif";
+    ctx.font = "600 34px 'Aavesh', sans-serif";
     ctx.fillStyle = '#facc15';
     ctx.fillText('LOT #2026-IIITU-REV3.4', 220, 1740);
 

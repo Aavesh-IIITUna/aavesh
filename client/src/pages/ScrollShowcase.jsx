@@ -51,13 +51,42 @@ const sponsorTiers = [
   "Mentorship & Technical Fellowships",
 ]
 
+function interpolateRgb(hex1, hex2, factor) {
+  const c1 = [
+    parseInt(hex1.slice(1, 3), 16),
+    parseInt(hex1.slice(3, 5), 16),
+    parseInt(hex1.slice(5, 7), 16),
+  ]
+  const c2 = [
+    parseInt(hex2.slice(1, 3), 16),
+    parseInt(hex2.slice(3, 5), 16),
+    parseInt(hex2.slice(5, 7), 16),
+  ]
+  const t = Math.max(0, Math.min(1, factor))
+  const r = Math.round(c1[0] + t * (c2[0] - c1[0]))
+  const g = Math.round(c1[1] + t * (c2[1] - c1[1]))
+  const b = Math.round(c1[2] + t * (c2[2] - c1[2]))
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
+}
+
+/**
+ * 3 distinct colors for the three sections only:
+ * 1st section (About): Blue (#0077ff)
+ * 2nd section (Domains): White (#f5f5f5)
+ * 3rd section (Sponsors): Orange (#ea580c)
+ */
+function getLiquidColor(stage) {
+  if (stage === 0) return "#0077ff" // 1st: Blue
+  if (stage === 1) return "#f5f5f5" // 2nd: White
+  return "#ea580c" // 3rd: Orange
+}
+
 export default function ScrollShowcase() {
   const trackRef = useRef(null)
   const canvasRef = useRef(null)
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [level, setLevel] = useState(0)
   const [activeStage, setActiveStage] = useState(0)
-  const [gaugeColor, setGaugeColor] = useState("#FF1238")
-  const [loadCount, setLoadCount] = useState(1)
 
   // Animation and frame management refs
   const imagesRef = useRef([])
@@ -80,7 +109,6 @@ export default function ScrollShowcase() {
     img0.onload = () => {
       images[0] = img0
       loadedCountRef.current += 1
-      setLoadCount((prev) => prev + 1)
       drawFrame(0)
     }
 
@@ -95,7 +123,6 @@ export default function ScrollShowcase() {
         img.onload = () => {
           images[i] = img
           loadedCountRef.current += 1
-          setLoadCount(loadedCountRef.current)
         }
       }
       currentBatch = end
@@ -119,7 +146,6 @@ export default function ScrollShowcase() {
       const images = imagesRef.current
       let targetImg = images[frameIndex]
 
-      // Fall back to nearest loaded frame if current frame is still loading
       if (!targetImg || !targetImg.complete) {
         for (let d = 1; d <= 25; d += 1) {
           if (images[frameIndex - d]?.complete) {
@@ -172,8 +198,7 @@ export default function ScrollShowcase() {
     return () => window.removeEventListener("resize", handleResize)
   }, [drawFrame])
 
-  // Threshold-based stage switching: NOT micro-percentage tied!
-  // Stages change cleanly when progress crosses discrete threshold marks.
+  // Track scroll progress and manage discrete stage switching
   useEffect(() => {
     const handleScroll = () => {
       const track = trackRef.current
@@ -187,8 +212,9 @@ export default function ScrollShowcase() {
       const progress = Math.max(0, Math.min(1, rawProgress))
 
       setScrollProgress(progress)
+      setLevel(Math.round(progress * 100))
 
-      // Discrete threshold switching (About -> Domains -> Sponsors)
+      // Discrete stage threshold marks
       let stage = 0
       if (progress >= 0.65) {
         stage = 2 // Stage 3: Sponsors
@@ -198,10 +224,6 @@ export default function ScrollShowcase() {
         stage = 0 // Stage 1: About
       }
       setActiveStage(stage)
-
-      if (stage === 0) setGaugeColor("#FF1238")
-      else if (stage === 1) setGaugeColor("#00E5FF")
-      else setGaugeColor("#FFB800")
 
       isScrollingRef.current = true
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
@@ -233,7 +255,7 @@ export default function ScrollShowcase() {
         staticBaseFrameRef.current = currentFrameRef.current
         staticStartTimeRef.current = now
       } else {
-        // When not scrolling, keep frames strictly still (no sine wave animation)
+        // When not scrolling, keep frames strictly still
         currentFrameRef.current +=
           (staticBaseFrameRef.current - currentFrameRef.current) * 0.12
       }
@@ -250,7 +272,7 @@ export default function ScrollShowcase() {
     }
   }, [drawFrame, scrollProgress])
 
-  // Pager click navigation to stage
+  // Scroll jump helper
   const scrollToStage = (stageIndex) => {
     const track = trackRef.current
     if (!track) return
@@ -258,7 +280,7 @@ export default function ScrollShowcase() {
     const scrollTop = window.scrollY + rect.top
     const total = track.offsetHeight - window.innerHeight
 
-    let targetPct = 0.05
+    let targetPct = 0.08
     if (stageIndex === 1) targetPct = 0.48
     if (stageIndex === 2) targetPct = 0.88
 
@@ -268,83 +290,44 @@ export default function ScrollShowcase() {
     })
   }
 
-  const gaugeValue = Math.round(scrollProgress * 100)
-  const isLoadedAll = loadCount >= TOTAL_FRAMES * 0.75
+  // Interactive gauge change handler
+  const handleGaugeChange = (newLevel) => {
+    setLevel(newLevel)
+    const track = trackRef.current
+    if (track) {
+      const rect = track.getBoundingClientRect()
+      const totalScrollable = track.offsetHeight - window.innerHeight
+      if (totalScrollable > 0) {
+        const scrollTop = window.scrollY + rect.top
+        window.scrollTo({
+          behavior: "smooth",
+          top: scrollTop + (newLevel / 100) * totalScrollable,
+        })
+      }
+    }
+  }
+
+  const liquidColor = getLiquidColor(activeStage)
 
   return (
     <section className="showcase-track scrollbar-none" id="showcase" ref={trackRef}>
-
       <div className="showcase-sticky scrollbar-none">
-        {/* Dynamic Energy Currents Canvas Background */}
+        {/* Dynamic Energy Currents Canvas Background Texture */}
         <div className="showcase-canvas-container">
           <canvas className="showcase-canvas" ref={canvasRef} />
           <div className="showcase-overlay" />
           <div className="showcase-grid-lines" />
         </div>
 
-        {/* PHONE ONLY: Sleek Thin Top Progress Bar */}
-        <div className="showcase-phone-bar">
-          <div
-            className="showcase-phone-bar-fill"
-            style={{
-              width: `${gaugeValue}%`,
-              backgroundColor: gaugeColor,
-              boxShadow: `0 0 10px ${gaugeColor}`,
-            }}
-          />
-          <div className="showcase-phone-meta">
-            <span>{isLoadedAll ? `${gaugeValue}%` : "LOADING..."}</span>
-          </div>
-        </div>
-
-        {/* TABLET ONLY: Left-side Vertical Stage & Scroll Rail */}
-        <div className="showcase-tab-left-rail">
-          <div className="showcase-tab-rail-track">
-            <div
-              className="showcase-tab-rail-progress"
-              style={{
-                height: `${gaugeValue}%`,
-                backgroundColor: gaugeColor,
-              }}
-            />
-          </div>
-          <div className="showcase-tab-rail-pills">
-            <button
-              className={`showcase-tab-pill ${activeStage === 0 ? "is-active" : ""}`}
-              onClick={() => scrollToStage(0)}
-              type="button"
-            >
-              <span className="tab-pill-dot" />
-              <span className="tab-pill-text">01 ABOUT</span>
-            </button>
-            <button
-              className={`showcase-tab-pill ${activeStage === 1 ? "is-active" : ""}`}
-              onClick={() => scrollToStage(1)}
-              type="button"
-            >
-              <span className="tab-pill-dot" />
-              <span className="tab-pill-text">02 DOMAINS</span>
-            </button>
-            <button
-              className={`showcase-tab-pill ${activeStage === 2 ? "is-active" : ""}`}
-              onClick={() => scrollToStage(2)}
-              type="button"
-            >
-              <span className="tab-pill-dot" />
-              <span className="tab-pill-text">03 SPONSORS</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Main Stage & SloshGauge Layout */}
+        {/* Content Layout: Transitioning left-to-right, emerging from the central SloshGauge */}
         <div className="showcase-stage-layout scrollbar-none">
-          {/* STAGE 1: ABOUT */}
+          {/* STAGE 1: ABOUT (Emerge to the left of the SloshGauge) */}
           <div
             className={`showcase-stage-card showcase-stage-card--about ${
               activeStage === 0 ? "is-active" : "is-inactive"
             }`}
           >
-            <div className="showcase-glass-panel">
+            <div className="showcase-glass-panel showcase-glass-panel--blue">
               <div className="section-label">
                 <span>02</span>
                 <span className="section-label__line" />
@@ -358,7 +341,7 @@ export default function ScrollShowcase() {
                 </h2>
               </div>
 
-              <p className="text-[#FF1238] font-mono text-xs uppercase tracking-wider mb-2 font-semibold">
+              <p className="text-[#0077ff] font-mono text-xs uppercase tracking-wider mb-2 font-semibold">
                 Electronics &amp; Technology Society · IIIT Una
               </p>
 
@@ -370,7 +353,7 @@ export default function ScrollShowcase() {
               </p>
 
               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 mb-4">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] shrink-0" />
                 <div className="text-xs">
                   <span className="text-gray-400 block font-mono">
                     Institutional Home
@@ -392,67 +375,35 @@ export default function ScrollShowcase() {
             </div>
           </div>
 
-          {/* CENTRAL ANCHOR: SLOSHGAUGE REACTOR HOUSING */}
-          <div className="showcase-reactor-col">
-            <div className="showcase-reactor-housing">
-              {/* Clean Reactor SloshGauge with percentage only */}
-              <SloshGauge
-                ariaLabel="Energy Flux Capacity"
-                glassColor="rgba(11, 16, 26, 0.85)"
-                height={200}
-                interactive={false}
-                liquidColor={gaugeColor}
-                radius={24}
-                showValue={true}
-                splash={0.45}
-                ticks={5}
-                tilt={0.5}
-                unit="%"
-                value={gaugeValue}
-                viscosity={0.16}
-                width={92}
-              />
-            </div>
-
-            {/* Quick-Stage Navigation Pager */}
-            <div className="showcase-pager">
-              <button
-                className={`showcase-pager-btn ${
-                  activeStage === 0 ? "is-active" : ""
-                }`}
-                onClick={() => scrollToStage(0)}
-                type="button"
-              >
-                01 About
-              </button>
-              <button
-                className={`showcase-pager-btn ${
-                  activeStage === 1 ? "is-active" : ""
-                }`}
-                onClick={() => scrollToStage(1)}
-                type="button"
-              >
-                02 Domains
-              </button>
-              <button
-                className={`showcase-pager-btn ${
-                  activeStage === 2 ? "is-active" : ""
-                }`}
-                onClick={() => scrollToStage(2)}
-                type="button"
-              >
-                03 Sponsors
-              </button>
-            </div>
+          {/* CENTRAL ANCHOR: SLOSHGAUGE WITH FLUID PHYSICS */}
+          <div className="showcase-gauge-center">
+            <SloshGauge
+              ariaLabel="Volume"
+              className="showcase-slosh-gauge"
+              glassColor="#27272a"
+              height={180}
+              interactive
+              liquidColor={liquidColor}
+              onChange={handleGaugeChange}
+              radius={20}
+              showValue
+              splash={0.42}
+              ticks={4}
+              tilt={0.45}
+              unit="%"
+              value={level}
+              viscosity={0.15}
+              width={88}
+            />
           </div>
 
-          {/* STAGE 2: TECHNICAL DOMAINS */}
+          {/* STAGE 2: TECHNICAL DOMAINS (Emerge to the right of the SloshGauge) */}
           <div
             className={`showcase-stage-card showcase-stage-card--domains ${
               activeStage === 1 ? "is-active" : "is-inactive"
             }`}
           >
-            <div className="showcase-glass-panel showcase-glass-panel--cyan">
+            <div className="showcase-glass-panel showcase-glass-panel--white">
               <div className="section-label">
                 <span>03</span>
                 <span className="section-label__line" />
@@ -500,13 +451,13 @@ export default function ScrollShowcase() {
             </div>
           </div>
 
-          {/* STAGE 3: SPONSORS */}
+          {/* STAGE 3: SPONSORS (LEFT CARD) */}
           <div
             className={`showcase-stage-card showcase-stage-card--sponsors-left ${
               activeStage === 2 ? "is-active" : "is-inactive"
             }`}
           >
-            <div className="showcase-glass-panel showcase-glass-panel--gold">
+            <div className="showcase-glass-panel showcase-glass-panel--orange">
               <div className="section-label">
                 <span>08</span>
                 <span className="section-label__line" />
@@ -515,7 +466,7 @@ export default function ScrollShowcase() {
 
               <h2 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-white my-2">
                 Build The Next Thing{" "}
-                <span className="text-[#FFB800]">With Us.</span>
+                <span className="text-[#ea580c]">With Us.</span>
               </h2>
 
               <p className="text-sm text-gray-300 leading-relaxed mb-4">
@@ -526,19 +477,20 @@ export default function ScrollShowcase() {
               </p>
 
               <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300">
-                <span className="inline-block w-2 h-2 rounded-full bg-amber-400 mr-2 shadow-[0_0_8px_#fbbf24]" />
+                <span className="inline-block w-2 h-2 rounded-full bg-orange-500 mr-2 shadow-[0_0_8px_#f97316]" />
                 Official corporate partnerships &amp; lab grants welcome for
                 the upcoming academic year.
               </div>
             </div>
           </div>
 
+          {/* STAGE 3: SPONSORS (RIGHT CARD) */}
           <div
             className={`showcase-stage-card showcase-stage-card--sponsors-right ${
               activeStage === 2 ? "is-active" : "is-inactive"
             }`}
           >
-            <div className="showcase-glass-panel showcase-glass-panel--gold">
+            <div className="showcase-glass-panel showcase-glass-panel--orange">
               <div className="section-label">
                 <span>OPPORTUNITIES</span>
                 <span className="section-label__line" />
@@ -562,6 +514,29 @@ export default function ScrollShowcase() {
             </div>
           </div>
         </div>
+
+        {/* Mobile / Small Devices Thin Sidebar Progress Indicator */}
+        <aside
+          className="showcase-mobile-sidebar"
+          aria-label="Section progress"
+        >
+          <div className="showcase-mobile-sidebar-track">
+            <div
+              className="showcase-mobile-sidebar-fill"
+              style={{
+                height: `${Math.max(4, Math.min(100, level))}%`,
+                backgroundColor: liquidColor,
+                boxShadow: `0 0 10px ${liquidColor}`,
+              }}
+            />
+          </div>
+          <span
+            className="showcase-mobile-sidebar-val"
+            style={{ color: liquidColor }}
+          >
+            {Math.round(level)}%
+          </span>
+        </aside>
       </div>
     </section>
   )

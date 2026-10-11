@@ -1,11 +1,7 @@
 import BrandMark from "./BrandMark"
-import { useClocks } from "../hooks/useClocks"
 
 const navigation = [
   ["Home", "#top"],
-  ["About", "#about"],
-  ["Domains", "#domains"],
-  ["Projects", "#projects"],
   ["Events", "#events"],
   ["Gallery", "#gallery"],
   ["Team", "#team"],
@@ -14,8 +10,6 @@ const navigation = [
 ]
 
 export default function Footer({ onReplayIntro, society }) {
-  const { utc, ist } = useClocks(true)
-
   return (
     <footer className="site-footer">
       <div className="container footer-main">
@@ -48,11 +42,6 @@ export default function Footer({ onReplayIntro, society }) {
         <div className="footer-social" aria-label="Social connections">
           <span>Official Lab Frequency</span>
           <p>{society?.email || "aavesh@iiitu.ac.in"}</p>
-          <div className="flex items-center gap-3 font-mono text-[10px] text-gray-400 mt-1">
-            <span>UTC: {utc}</span>
-            <span>•</span>
-            <span>IST: {ist}</span>
-          </div>
         </div>
       </div>
 

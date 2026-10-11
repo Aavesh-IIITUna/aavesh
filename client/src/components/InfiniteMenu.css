@@ -65,7 +65,7 @@
 .infinite-menu__title {
   position: static;
   margin: 0;
-  font-family: var(--display, 'AAVESH Display', sans-serif);
+  font-family: var(--display, 'Aavesh', sans-serif);
   font-size: clamp(1.25rem, 3.2cqw, 1.85rem);
   font-weight: 700;
   line-height: 1.2;

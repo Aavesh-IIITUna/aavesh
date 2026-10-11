@@ -1,14 +1,14 @@
 import CinematicIntro from "./components/CinematicIntro"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
-import TechCursor from "./components/TechCursor"
+import AaveshCursor from "./components/AaveshCursor"
 import ScrollHUD from "./components/ScrollHUD"
 
 /**
  * DefaultLayout component for AAVESH
  * Defines the canonical responsive layout shell for all pages across mobile, tablet, and desktop.
  * Wraps pages with CinematicIntro, Skip Link, Navbar, Main Content Container, Footer,
- * TechCursor, and ScrollHUD.
+ * AaveshCursor, and ScrollHUD.
  */
 export default function DefaultLayout({
   children,
@@ -55,8 +55,8 @@ export default function DefaultLayout({
       {/* Global Site Footer */}
       <Footer onReplayIntro={onReplayIntro} society={society} />
 
-      {/* Interactive Tech Cursor (auto-hidden on touch/mobile screens) */}
-      {showCursor && <TechCursor />}
+      {/* Interactive AAVESH Tech Cursor (auto-hidden on touch/mobile screens) */}
+      {showCursor && <AaveshCursor />}
 
       {/* Fixed Scroll Telemetry HUD */}
       {showHUD && (

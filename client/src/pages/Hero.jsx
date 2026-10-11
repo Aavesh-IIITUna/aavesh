@@ -1,10 +1,12 @@
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { useEffect, useRef, useState } from "react"
+import { lazy, Suspense, useEffect, useRef, useState } from "react"
 import HeroContent from "../components/HeroContent"
+import MobileHero from "../components/MobileHero"
 import { useReducedMotion } from "../hooks/useReducedMotion"
-import HeroCanvas from "../three/HeroCanvas"
 import { soundFX } from "../utils/soundEffects"
+
+const DesktopHeroCanvas = lazy(() => import("../three/HeroCanvas"))
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -17,6 +19,33 @@ export default function Hero({ reverseFlow = false, onToggleReverseFlow }) {
   const [chipHovered, setChipHovered] = useState(false)
   const [mouseSpotlight, setMouseSpotlight] = useState({ x: 50, y: 50 })
   const reducedMotion = useReducedMotion()
+
+  // Dynamic switching: mobile, tablet (<= 1024px), touch devices or SaveData use lightweight MobileHero
+  const [useLite, setUseLite] = useState(() => {
+    if (typeof window === "undefined") return false
+    return (
+      window.innerWidth <= 1024 ||
+      window.matchMedia("(max-width: 1024px), (pointer: coarse)").matches ||
+      navigator.connection?.saveData === true
+    )
+  })
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1024px), (pointer: coarse)")
+    const checkMode = () => {
+      setUseLite(
+        window.innerWidth <= 1024 ||
+        mql.matches ||
+        navigator.connection?.saveData === true
+      )
+    }
+    mql.addEventListener("change", checkMode)
+    window.addEventListener("resize", checkMode, { passive: true })
+    return () => {
+      mql.removeEventListener("change", checkMode)
+      window.removeEventListener("resize", checkMode)
+    }
+  }, [])
 
   // Track mouse for dynamic radial hero background spotlight
   useEffect(() => {
@@ -134,15 +163,6 @@ export default function Hero({ reverseFlow = false, onToggleReverseFlow }) {
           },
           "-=0.3",
         )
-        .to(
-          [".hero-telemetry-strip", ".hero-footer-bar"],
-          {
-            opacity: 1,
-            duration: 0.6,
-            stagger: 0.1,
-          },
-          "-=0.25",
-        )
     }, heroEl)
 
     return () => {
@@ -161,6 +181,10 @@ export default function Hero({ reverseFlow = false, onToggleReverseFlow }) {
 
   const handleChipClick = () => {
     // Silent & clean: no component or sound appears when clicking the mesh
+  }
+
+  if (useLite) {
+    return <MobileHero />
   }
 
   return (
@@ -189,16 +213,18 @@ export default function Hero({ reverseFlow = false, onToggleReverseFlow }) {
         }}
       />
 
-      {/* Interactive 3D PCB Canvas (New 3D PCB from 3d pcb folder) */}
+      {/* Interactive 3D PCB Canvas (Desktop only, lazy loaded) */}
       <div className="hero-3d-container">
-        <HeroCanvas
-          autoRotate={autoRotate}
-          burstRipple={burstRipple}
-          onChipClick={handleChipClick}
-          onChipHover={setChipHovered}
-          powerSurge={powerSurge}
-          scrollProgress={scrollProgress}
-        />
+        <Suspense fallback={null}>
+          <DesktopHeroCanvas
+            autoRotate={autoRotate}
+            burstRipple={burstRipple}
+            onChipClick={handleChipClick}
+            onChipHover={setChipHovered}
+            powerSurge={powerSurge}
+            scrollProgress={scrollProgress}
+          />
+        </Suspense>
       </div>
 
       {/* Shadow Veil for text contrast protection */}
@@ -215,15 +241,6 @@ export default function Hero({ reverseFlow = false, onToggleReverseFlow }) {
           powerSurge={powerSurge}
           reverseFlow={reverseFlow}
         />
-      </div>
-
-      {/* Technical Footer Bar / Scroll Indicator */}
-      <div className="hero-footer-bar">
-        <span>01 // HARDWARE & EMBEDDED FOUNDRY</span>
-        <a className="hero-scroll-indicator" href="#about">
-          <span>SCROLL TO EXPLORE</span>
-          <span className="hero-scroll-line" />
-        </a>
       </div>
     </section>
   )

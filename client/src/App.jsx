@@ -447,10 +447,6 @@ function Gallery() {
               </>
             }
           />
-          <div className="content-notice content-notice--compact" data-reveal>
-            <ContentBadge>Lab Archive</ContentBadge>
-            <p>Hands-on engineering in action across IIIT Una laboratories.</p>
-          </div>
         </div>
 
         {/* 3D DepthCarousel from React Bits */}
@@ -529,10 +525,6 @@ function Team({ members }) {
               </>
             }
           />
-          <div className="content-notice content-notice--compact" data-reveal>
-            <ContentBadge variant="live">Executive Leadership</ContentBadge>
-            <p>Drag or click to spin through members of the club.</p>
-          </div>
         </div>
 
         {/* 3D InfiniteMenu for Members of the Club from React Bits */}
@@ -873,9 +865,6 @@ export default function App() {
         reverseFlow={reverseFlow}
       />
       <ScrollShowcase />
-      <About society={society} />
-      <Domains tracks={tracks} />
-      <Projects live={live} projects={projects} />
       <Events />
       <Gallery />
       <Team members={members} />

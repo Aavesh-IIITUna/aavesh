@@ -4,9 +4,6 @@ import BrandMark from "./BrandMark"
 
 const navLinks = [
   { label: "Home", href: "#top" },
-  { label: "About", href: "#about" },
-  { label: "Domains", href: "#domains" },
-  { label: "Projects", href: "#projects" },
   { label: "Events", href: "#events" },
   { label: "Gallery", href: "#gallery" },
   { label: "Team", href: "#team" },
@@ -174,7 +171,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`navbar-root ${scrolled ? "is-scrolled" : ""}`}
+      className={`navbar-root ${scrolled ? "is-scrolled" : ""} ${menuOpen ? "is-menu-open" : ""}`}
       id="site-navbar"
     >
       <div className="navbar-container">
@@ -186,11 +183,7 @@ export default function Navbar() {
           onClick={(e) => scrollToSection(e, "#top")}
         >
           <div className="navbar-brand-icon">
-            <BrandMark />
-          </div>
-          <div className="navbar-brand-text">
-            <span className="navbar-brand-name">AAVESH</span>
-            <span className="navbar-brand-sub">IIIT UNA</span>
+            <BrandMark className="h-8 w-auto md:h-9" />
           </div>
         </a>
 

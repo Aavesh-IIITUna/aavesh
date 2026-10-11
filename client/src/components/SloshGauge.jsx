@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import "./SloshGauge.css"
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
 const H = 1 / 120
 const DT_MAX = 0.05
-const TILT_GAIN = 0.07
+const TILT_GAIN = 0.08
 const TILT_MAX = 30
 const REST_POS = 0.05
 const REST_VEL = 2
@@ -12,37 +13,35 @@ const BIG = 10
 const BAND = 10
 
 const onColor = (hex) => {
-  if (!hex || typeof hex !== "string" || !hex.startsWith("#")) return "#ffffff"
+  if (!hex || typeof hex !== "string") return "#ffffff"
   const raw = hex.replace("#", "")
   const full = raw.length === 3 ? [...raw].map((c) => c + c).join("") : raw
   const n = parseInt(full, 16)
   if (Number.isNaN(n)) return "#ffffff"
-  return (((n >> 16) & 255) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) /
-    1000 >=
-    150
+  return (((n >> 16) & 255) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 >= 150
     ? "#111111"
     : "#ffffff"
 }
 
 export default function SloshGauge({
-  ariaLabel = "Volume",
-  className = "",
-  defaultValue = 60,
-  disabled = false,
-  glassColor = "#27272a",
-  height = 180,
-  interactive = false,
-  liquidColor = "#f5f5f5",
-  onChange,
-  radius = 20,
-  showValue = true,
-  splash = 0.42,
-  ticks = 4,
-  tilt = 0.45,
-  unit = "%",
   value,
-  viscosity = 0.15,
+  defaultValue = 60,
+  onChange,
+  interactive = false,
+  showValue = true,
+  disabled = false,
+  liquidColor = "#f5f5f5",
+  glassColor = "#27272a",
   width = 88,
+  height = 180,
+  radius = 20,
+  ticks = 4,
+  viscosity = 0.15,
+  tilt = 0.45,
+  splash = 0.42,
+  unit = "%",
+  ariaLabel = "Level",
+  className = "",
 }) {
   const root = useRef(null)
   const liquid = useRef(null)
@@ -55,31 +54,19 @@ export default function SloshGauge({
   const reduce = useRef(false)
   const [held, setHeld] = useState(false)
   const live = useRef({})
-  live.current = {
-    height,
-    onChange,
-    splash,
-    tilt,
-    unit,
-    value,
-    viscosity,
-    width,
-  }
+  live.current = { height, onChange, splash, tilt, unit, value, viscosity, width }
+  const prevVal = useRef({ t: performance.now(), v: start })
 
   const paint = () => {
     const { L, v, x } = sim.current
     const { height: Hh, tilt: t, width: W } = live.current
-    const th = reduce.current
-      ? 0
-      : clamp(t * v * TILT_GAIN, -TILT_MAX, TILT_MAX)
+    const th = reduce.current ? 0 : clamp(t * v * TILT_GAIN, -TILT_MAX, TILT_MAX)
     const lean = (Math.tan((th * Math.PI) / 180) * W) / 2
     const top = 100 - x
     if (liquid.current) {
       liquid.current.style.clipPath = `polygon(0 calc(${top}% + ${lean}px), 100% calc(${top}% - ${lean}px), 100% 100%, 0 100%)`
     }
-    if (marker.current) {
-      marker.current.style.transform = `translateY(${((100 - L) * Hh) / 100}px)`
-    }
+    if (marker.current) marker.current.style.transform = `translateY(${((100 - L) * Hh) / 100}px)`
   }
 
   const say = () => {
@@ -114,17 +101,13 @@ export default function SloshGauge({
           s.v = -s.v * rest
         }
       }
-      if (
-        !grip.current &&
-        Math.abs(s.L - s.x) < REST_POS &&
-        Math.abs(s.v) < REST_VEL
-      ) {
+      if (!grip.current && Math.abs(s.L - s.x) < REST_POS && Math.abs(s.v) < REST_VEL) {
         s.x = s.L
         s.v = 0
       }
     }
     paint()
-    const parked = !grip.current && s.x === s.L && s.v === 0
+    const parked = !grip.current && s.x === s.L && Math.abs(s.v) === 0
     if (parked) {
       s.raf = 0
       s.last = 0
@@ -134,7 +117,9 @@ export default function SloshGauge({
   }
 
   const wake = () => {
-    if (!sim.current.raf) sim.current.raf = requestAnimationFrame(tick)
+    if (!sim.current.raf) {
+      sim.current.raf = requestAnimationFrame(tick)
+    }
   }
 
   const setLevel = (L, instant) => {
@@ -145,13 +130,27 @@ export default function SloshGauge({
       s.v = 0
     }
     say()
+    paint()
     wake()
   }
 
   useLayoutEffect(() => {
     if (value === undefined) return
     if (grip.current && Math.round(sim.current.L) === value) return
+
+    const now = performance.now()
+    const dt = Math.max(0.016, (now - prevVal.current.t) / 1000)
+    const dVal = value - prevVal.current.v
+    prevVal.current = { t: now, v: value }
+
+    // Impart realistic fluid momentum from value velocity changes (e.g. on scroll)
+    if (Math.abs(dVal) > 0.4 && dt < 0.25) {
+      const impulse = clamp((dVal / dt) * 0.4, -160, 160)
+      sim.current.v += impulse
+    }
+
     setLevel(value, false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
 
   useLayoutEffect(() => {
@@ -166,23 +165,21 @@ export default function SloshGauge({
     const s = sim.current
     return () => {
       mq.removeEventListener("change", sync)
-      cancelAnimationFrame(s.raf)
+      if (s.raf) {
+        cancelAnimationFrame(s.raf)
+        s.raf = 0
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     paint()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [width, height, tilt, showValue, interactive, disabled])
 
   const levelAt = (clientY, g) =>
-    clamp(
-      ((g.rect.bottom - clientY) /
-        g.scale /
-        (root.current?.offsetHeight || g.rect.height)) *
-        100,
-      0,
-      100,
-    )
+    clamp(((g.rect.bottom - clientY) / g.scale / (root.current?.offsetHeight || g.rect.height)) * 100, 0, 100)
 
   const report = () => {
     const g = grip.current
@@ -211,9 +208,7 @@ export default function SloshGauge({
     grip.current = g
     try {
       el.setPointerCapture(e.pointerId)
-    } catch {
-      // pointer capture unsupported or not active
-    }
+    } catch {}
     setHeld(true)
     if (g.band) {
       wake()
@@ -241,17 +236,12 @@ export default function SloshGauge({
     grip.current = null
     try {
       root.current?.releasePointerCapture(e.pointerId)
-    } catch {
-      // pointer capture already released
-    }
+    } catch {}
     setHeld(false)
     if (reason === "escape") {
       setLevel(g.at)
       live.current.onChange?.(Math.round(g.at))
-    } else if (
-      live.current.value !== undefined &&
-      Math.round(sim.current.L) !== live.current.value
-    ) {
+    } else if (live.current.value !== undefined && Math.round(sim.current.L) !== live.current.value) {
       setLevel(live.current.value)
     }
     wake()
@@ -292,9 +282,7 @@ export default function SloshGauge({
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={Math.round(start)}
-      className={`group relative isolate box-border inline-block overflow-hidden leading-none font-semibold tabular-nums outline-none select-none transition-shadow ${
-        interactive ? "cursor-ns-resize touch-none" : ""
-      } ${disabled ? "cursor-not-allowed opacity-50" : ""} ${className}`}
+      className={`slosh-gauge${className ? ` ${className}` : ""}`}
       data-disabled={disabled ? "true" : "false"}
       data-held={held ? "true" : "false"}
       data-interactive={interactive ? "true" : "false"}
@@ -307,69 +295,31 @@ export default function SloshGauge({
       ref={root}
       role={interactive ? "slider" : "meter"}
       style={{
-        background: glassColor,
-        borderRadius: `${r}px`,
-        boxShadow:
-          "inset 0 0 0 1px rgba(255,255,255,0.12), 0 12px 36px rgba(0,0,0,0.5), 0 0 24px rgba(255,18,56,0.15)",
-        fontSize: `${clamp(Math.round(width * 0.16), 12, 20)}px`,
-        height: `${height}px`,
-        width: `${width}px`,
+        "--sg-font": `${clamp(Math.round(width * 0.16), 12, 20)}px`,
+        "--sg-glass": glassColor,
+        "--sg-h": `${height}px`,
+        "--sg-liquid": liquidColor,
+        "--sg-on-liquid": onColor(liquidColor),
+        "--sg-r": `${r}px`,
+        "--sg-ticks": ticks,
+        "--sg-w": `${width}px`,
       }}
       tabIndex={interactive && !disabled ? 0 : undefined}
     >
       {showValue ? (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 grid place-items-center font-mono font-bold tracking-wider z-10"
-          ref={textA}
-          style={{ color: "rgba(255,255,255,0.6)" }}
-        >
+        <span aria-hidden="true" className="slosh-gauge__value" ref={textA}>
           {label}
         </span>
       ) : null}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0"
-        ref={liquid}
-        style={{
-          background: liquidColor,
-          clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)",
-          filter: "drop-shadow(0 -4px 12px rgba(255, 18, 56, 0.4))",
-        }}
-      >
+      <div aria-hidden="true" className="slosh-gauge__liquid" ref={liquid}>
         {showValue ? (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 grid place-items-center font-mono font-bold tracking-wider z-10"
-            ref={textB}
-            style={{ color: onColor(liquidColor) }}
-          >
+          <span className="slosh-gauge__value" ref={textB}>
             {label}
           </span>
         ) : null}
       </div>
-      {ticks > 0 ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute right-0 bottom-0 h-full w-[22%] z-20"
-          style={{
-            backgroundImage:
-              "linear-gradient(to top, rgba(255,255,255,0.2) 0 1px, transparent 1px)",
-            backgroundPosition: "bottom",
-            backgroundRepeat: "repeat-y",
-            backgroundSize: `100% calc(100% / ${ticks})`,
-          }}
-        />
-      ) : null}
-      {interactive && !disabled ? (
-        <div
-          aria-hidden="true"
-          className={`pointer-events-none absolute inset-x-[10%] top-0 -mt-px h-0.5 rounded-[1px] bg-white transition-opacity duration-150 z-20 ${
-            held ? "opacity-100" : "opacity-0"
-          }`}
-          ref={marker}
-        />
-      ) : null}
+      {ticks > 0 ? <div aria-hidden="true" className="slosh-gauge__ticks" /> : null}
+      {interactive && !disabled ? <div aria-hidden="true" className="slosh-gauge__marker" ref={marker} /> : null}
     </div>
   )
 }

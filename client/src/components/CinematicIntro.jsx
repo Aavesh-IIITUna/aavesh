@@ -392,7 +392,7 @@ export default function CinematicIntro({ onComplete }) {
             <span
               className="text-black font-black uppercase text-[11px] sm:text-[13px] md:text-[15px] select-none tracking-[0.24em] whitespace-nowrap"
               style={{
-                fontFamily: "var(--display, 'AAVESH Display', sans-serif)",
+                fontFamily: "'Aavesh', sans-serif",
                 transform: "skewX(16deg)",
                 letterSpacing: "0.24em",
               }}
@@ -424,7 +424,8 @@ export default function CinematicIntro({ onComplete }) {
       <div className="absolute bottom-6 left-8 z-10 pointer-events-none">
         <span
           ref={loadingTextRef}
-          className="font-mono text-[11px] uppercase tracking-[0.25em] text-zinc-400 select-none"
+          className="text-[11px] uppercase tracking-[0.25em] text-zinc-400 select-none"
+          style={{ fontFamily: "'Aavesh', sans-serif" }}
         >
           LOADING
         </span>
@@ -432,7 +433,8 @@ export default function CinematicIntro({ onComplete }) {
       <div className="absolute bottom-6 right-8 z-10 pointer-events-none">
         <span
           ref={percentTextRef}
-          className="font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-400 select-none"
+          className="text-[11px] uppercase tracking-[0.2em] text-zinc-400 select-none"
+          style={{ fontFamily: "'Aavesh', sans-serif" }}
         >
           0%
         </span>
