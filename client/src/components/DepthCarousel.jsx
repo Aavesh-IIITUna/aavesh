@@ -194,7 +194,7 @@ const DepthCarousel = ({
     if (!el) return;
     const onWheel = e => {
       // Trigger carousel scroll ONLY when hovering over a card image/item (.depth-card), else allow normal page scroll
-      const isCardHovered = e.target && e.target.closest('.depth-card');
+      const isCardHovered = e.target && e.target.closest('.depth-carousel__card');
       if (!isCardHovered) return;
 
       const cfg = cfgRef.current;

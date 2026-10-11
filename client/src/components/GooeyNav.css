@@ -1,0 +1,12 @@
+.gooey-nav { position: relative; display: inline-flex; align-items: center; gap: 4px; isolation: isolate; font-family: var(--mono, monospace); }
+.gooey-nav.navbar-links { padding: 5px; background: rgba(4,9,18,.78); }
+.gooey-nav--framed { padding: 5px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; background: rgba(4,9,18,.78); box-shadow: 0 16px 36px -20px #000; backdrop-filter: blur(16px); }
+.gooey-nav__pill { position: absolute; z-index: -1; top: 5px; bottom: 5px; border-radius: 999px; background: #00e5ff; box-shadow: 0 0 22px rgba(0,229,255,.48); transition: transform .42s cubic-bezier(.22,1,.36,1), width .42s cubic-bezier(.22,1,.36,1), opacity .2s; }
+.gooey-nav__particle-field { position: absolute; z-index: -2; inset: 0; overflow: hidden; border-radius: 999px; pointer-events: none; filter: blur(.2px); }
+.gooey-nav__particle { position: absolute; top: 0; left: 0; width: var(--size); height: var(--size); border-radius: 50%; background: #00e5ff; box-shadow: 0 0 10px rgba(0,229,255,.8); animation: gooey-travel .62s cubic-bezier(.25,.7,.25,1) both; animation-delay: var(--delay); }
+.gooey-nav__link { position: relative; z-index: 1; padding: .48rem .8rem; border: 0; border-radius: 999px; background: transparent; color: #94a3b8; font: inherit; font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; transition: color .2s ease; }
+.gooey-nav__link:hover { color: #fff; }.gooey-nav__link.is-active { color: #001319; font-weight: 700; }.gooey-nav__link:focus-visible { outline: 2px solid #00e5ff; outline-offset: 2px; }
+@keyframes gooey-travel { 0% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(.15); } 16% { opacity: 1; transform: translate(var(--sx), var(--sy)) scale(1); } 52% { opacity: .9; transform: translate(var(--mx), var(--my)) scale(.75); } 84% { opacity: 1; transform: translate(var(--ex), var(--ey)) scale(.9); } 100% { opacity: 0; transform: translate(var(--ex), var(--ey)) scale(.1); } }
+@media (prefers-reduced-motion: reduce) { .gooey-nav__particle { display: none; } .gooey-nav__pill { transition: none; } }
+@media (max-width: 959px) { .gooey-nav.navbar-links { display: none; } }
+@media (min-width: 960px) { .gooey-nav.navbar-links { display: inline-flex; } }

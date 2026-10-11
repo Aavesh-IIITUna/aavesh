@@ -19,6 +19,8 @@ import BrandMark from "./components/BrandMark"
 import DefaultLayout from "./layout"
 import DepthCarousel from "./components/DepthCarousel"
 import InfiniteMenu from "./components/InfiniteMenu"
+import TriangleGallery from "./components/TriangleGallery"
+import { galleryCollections } from "./data/siteData"
 import { useSociety } from "./hooks/useSociety"
 import { api, ApiRequestError } from "./lib/api"
 import Hero from "./pages/Hero"
@@ -126,37 +128,6 @@ const defaultDomains = [
     title: "Robotics & Autonomous Nodes",
     copy: "Integrated mechanical, motor control, LiDAR slam, and intelligent computer vision for autonomous navigation.",
     code: "RB.04",
-  },
-]
-
-const gallery = [
-  {
-    alt: "Close-up of hands working on an electronic circuit board",
-    credit: "Illustrative image · Minh Đức / Unsplash",
-    image: "/images/soldering.jpg",
-    label: "Build",
-    title: "Hands-on electronics",
-  },
-  {
-    alt: "A robot prototype being reviewed by people",
-    credit: "Illustrative image · C.F. Photography / Unsplash",
-    image: "/images/robotics.jpg",
-    label: "Test",
-    title: "Robotics in motion",
-  },
-  {
-    alt: "Engineering students collaborating in a workshop",
-    credit: "Illustrative image · ThisisEngineering / Unsplash",
-    image: "/images/workshop.jpg",
-    label: "Learn",
-    title: "Collaborative workshops",
-  },
-  {
-    alt: "Detailed dark-blue circuit board",
-    credit: "Illustrative image · Vishnu Mohanan / Unsplash",
-    image: "/images/circuit-board.jpg",
-    label: "Explore",
-    title: "Inside the hardware",
   },
 ]
 
@@ -427,6 +398,7 @@ function Events() {
 }
 
 function Gallery() {
+  const [selectedCollection, setSelectedCollection] = useState(null)
   return (
     <section
       aria-labelledby="gallery-title"
@@ -449,27 +421,29 @@ function Gallery() {
           />
         </div>
 
-        {/* 3D DepthCarousel from React Bits */}
-        <div style={{ height: "460px", position: "relative", width: "100%" }} data-reveal>
-          <DepthCarousel
-            autoplay={true}
-            autoplayDelay={3000}
-            blur={6}
-            cardHeight={380}
-            cardWidth={320}
-            depth={220}
-            falloff={0.2}
-            items={gallery}
-            loop={true}
-            perspective={1400}
-            showControls={true}
-            showIndicators={true}
-            spread={90}
-            tilt={22}
-            tiltDirection="right"
-            visibleCards={4}
-          />
-        </div>
+        <TriangleGallery
+          enableAudio={false}
+          items={galleryCollections}
+          itemsPerRow={3}
+          layout="ribbon"
+          onSelect={(collection) => setSelectedCollection(collection)}
+          showModal={false}
+          spotlightFirst={false}
+          theme="cyan"
+        />
+        {selectedCollection && (
+          <div className="gallery-carousel-modal" onMouseDown={() => setSelectedCollection(null)} role="presentation">
+            <div className="gallery-carousel-modal__panel" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="gallery-carousel-title">
+              <button className="gallery-carousel-modal__close" type="button" onClick={() => setSelectedCollection(null)} aria-label="Close gallery carousel">×</button>
+              <p className="gallery-carousel-modal__eyebrow">{selectedCollection.code}</p>
+              <h3 id="gallery-carousel-title">{selectedCollection.title}</h3>
+              <p>{selectedCollection.description}</p>
+              <div className="gallery-carousel-modal__carousel">
+                <DepthCarousel autoplay autoplayDelay={3000} blur={6} cardHeight={360} cardWidth={300} depth={190} falloff={0.2} items={selectedCollection.slides} loop perspective={1400} showControls showIndicators spread={75} tilt={20} tiltDirection="right" visibleCards={3} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )

@@ -1,9 +1,11 @@
 import { Menu, X } from "lucide-react"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import BrandMark from "./BrandMark"
+import GooeyNav from "./GooeyNav"
 
 const navLinks = [
   { label: "Home", href: "#top" },
+  { label: "About", href: "#about" },
   { label: "Events", href: "#events" },
   { label: "Gallery", href: "#gallery" },
   { label: "Team", href: "#team" },
@@ -36,9 +38,6 @@ export default function Navbar() {
         const scrollY = window.scrollY
         setScrolled(scrollY > 20)
 
-        // Ignore scroll spy immediately after user clicks a nav link
-        if (isClickScrollingRef.current) return
-
         const windowHeight = window.innerHeight
         const docHeight = document.documentElement.scrollHeight
 
@@ -46,6 +45,19 @@ export default function Navbar() {
         if (scrollY < 120) {
           setActiveId("top")
           return
+        }
+
+        // The About section is a tall sticky scroll showcase. Activate it as
+        // soon as the showcase enters the viewport, then retain it throughout
+        // the entire sticky track.
+        const aboutSection = document.getElementById("about")
+        if (aboutSection) {
+          const aboutRect = aboutSection.getBoundingClientRect()
+          const navbarHeight = 76
+          if (aboutRect.top <= window.innerHeight - navbarHeight && aboutRect.bottom > navbarHeight) {
+            setActiveId("about")
+            return
+          }
         }
 
         // Edge case: Near bottom of the page
@@ -148,6 +160,8 @@ export default function Navbar() {
     }
   }
 
+  const activeNavIndex = navLinks.findIndex((link) => link.href === `#${activeId}`)
+
   // Close mobile drawer on Escape
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -188,35 +202,12 @@ export default function Navbar() {
         </a>
 
         {/* Desktop Navigation Links with Hardware-Accelerated Sliding Indicator */}
-        <nav aria-label="Main Navigation" className="navbar-links">
-          {/* Gliding active pill indicator */}
-          <div
-            aria-hidden="true"
-            className="navbar-active-pill"
-            style={{
-              transform: `translate3d(${indicatorStyle.left}px, 0, 0)`,
-              width: `${indicatorStyle.width}px`,
-              opacity: indicatorStyle.opacity,
-            }}
-          />
-
-          {navLinks.map(({ label, href }, idx) => {
-            const id = href.replace("#", "")
-            const isActive = activeId === id
-            return (
-              <a
-                className={`navbar-link ${isActive ? "is-active" : ""}`}
-                href={href}
-                key={href}
-                onClick={(e) => scrollToSection(e, href)}
-                ref={(el) => (navLinksRef.current[idx] = el)}
-              >
-                {isActive && <span className="navbar-link-dot" />}
-                <span>{label}</span>
-              </a>
-            )
-          })}
-        </nav>
+        <GooeyNav
+          className="navbar-links"
+          items={navLinks}
+          activeIndex={activeNavIndex === -1 ? navLinks.length - 1 : activeNavIndex}
+          onChange={(_, item) => scrollToSection({ preventDefault() {} }, item.href)}
+        />
 
         {/* Right CTA & Mobile Toggle */}
         <div className="navbar-actions">

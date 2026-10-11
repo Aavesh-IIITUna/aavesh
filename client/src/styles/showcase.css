@@ -93,7 +93,7 @@
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .showcase-mobile-sidebar {
     display: flex;
   }
@@ -447,23 +447,32 @@
   will-change: transform, opacity;
 }
 
+.showcase-split-stage { display: contents; }
+.showcase-stage-title { margin: .6rem 0; color: #fff; font-family: var(--display, sans-serif); font-size: clamp(1.65rem, 3vw, 2.4rem); line-height: 1.05; }
+.showcase-stage-copy { margin: 0; color: #cbd5e1; font-size: .94rem; line-height: 1.65; }
+.showcase-advance { display: inline-flex; align-items: center; gap: .55rem; margin-top: 1.35rem; border: 0; background: transparent; color: #67e8f9; font-family: var(--mono, monospace); font-size: .7rem; letter-spacing: .1em; text-decoration: none; cursor: pointer; }
+.showcase-advance:hover { color: #fff; }
+
 /* Left Orbit Stage (About & Sponsors-Left): Emerges from SloshGauge toward the left */
 .showcase-stage-card--about,
-.showcase-stage-card--sponsors-left {
+.showcase-stage-card--sponsors-left,
+.showcase-stage-card--left {
   grid-column: 1 / 2;
   grid-row: 1 / 2;
   transform-origin: right center;
 }
 
 .showcase-stage-card--about.is-inactive,
-.showcase-stage-card--sponsors-left.is-inactive {
+.showcase-stage-card--sponsors-left.is-inactive,
+.showcase-stage-card--left.is-inactive {
   opacity: 0;
   transform: translateX(90px) scale(0.68);
   pointer-events: none;
 }
 
 .showcase-stage-card--about.is-active,
-.showcase-stage-card--sponsors-left.is-active {
+.showcase-stage-card--sponsors-left.is-active,
+.showcase-stage-card--left.is-active {
   opacity: 1;
   transform: translateX(0) scale(1);
   pointer-events: auto;
@@ -471,21 +480,24 @@
 
 /* Right Orbit Stage (Domains & Sponsors-Right): Emerges from SloshGauge toward the right */
 .showcase-stage-card--domains,
-.showcase-stage-card--sponsors-right {
+.showcase-stage-card--sponsors-right,
+.showcase-stage-card--right {
   grid-column: 3 / 4;
   grid-row: 1 / 2;
   transform-origin: left center;
 }
 
 .showcase-stage-card--domains.is-inactive,
-.showcase-stage-card--sponsors-right.is-inactive {
+.showcase-stage-card--sponsors-right.is-inactive,
+.showcase-stage-card--right.is-inactive {
   opacity: 0;
   transform: translateX(-90px) scale(0.68);
   pointer-events: none;
 }
 
 .showcase-stage-card--domains.is-active,
-.showcase-stage-card--sponsors-right.is-active {
+.showcase-stage-card--sponsors-right.is-active,
+.showcase-stage-card--right.is-active {
   opacity: 1;
   transform: translateX(0) scale(1);
   pointer-events: auto;

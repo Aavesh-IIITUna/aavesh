@@ -46,6 +46,33 @@ export const galleryItems = [
   }
 ];
 
+export const galleryCollections = [
+  {
+    id: "build",
+    code: "BUILD // 01",
+    title: "Hands-on electronics",
+    description: "Bench work, soldering, and the detail behind a clean prototype.",
+    image: "/images/soldering.jpg",
+    slides: galleryItems
+  },
+  {
+    id: "test",
+    code: "TEST // 02",
+    title: "Robotics in motion",
+    description: "Field tests, motion systems, and autonomous nodes under load.",
+    image: "/images/robotics.jpg",
+    slides: [...galleryItems.slice(1), galleryItems[0]]
+  },
+  {
+    id: "learn",
+    code: "LEARN // 03",
+    title: "Collaborative workshops",
+    description: "The shared experiments and reviews that move an idea forward.",
+    image: "/images/workshop.jpg",
+    slides: [...galleryItems.slice(2), ...galleryItems.slice(0, 2)]
+  }
+];
+
 export const teamMembers = [
   {
     image: "/images/circuit-board.jpg",
@@ -105,6 +132,29 @@ export const sponsorTiers = [
   "Component & Chip Grants",
   "Hackathon Title Patron",
   "Mentorship & Technical Fellowships"
+];
+
+export const showcaseStages = [
+  {
+    id: "about",
+    number: "02",
+    eyebrow: "About AAVESH",
+    title: "AAVESH",
+    accent: "#0077ff",
+    body: "A student-driven technical society dedicated to hands-on engineering, hardware innovation, and collaborative building. We bridge silicon architecture, intelligent systems, and embedded firmware.",
+    placement: "left",
+    panel: "blue"
+  },
+  ...domainItems.map((domain, index) => ({
+    id: domain.code,
+    number: String(index + 3).padStart(2, "0"),
+    eyebrow: domain.code,
+    title: domain.title,
+    accent: ["#00e5ff", "#a78bfa", "#f59e0b", "#34d399"][index],
+    body: domain.copy,
+    placement: index % 2 === 0 ? "right" : "left",
+    panel: "white"
+  }))
 ];
 
 export const societyDetails = {
