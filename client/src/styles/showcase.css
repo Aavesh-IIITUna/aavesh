@@ -1,0 +1,722 @@
+/* ==========================================================================
+   ENERGY SCROLL SHOWCASE STYLES
+   Smooth Threshold-Based Showcase with SloshGauge Reactor & Energy Frames
+   ========================================================================== */
+
+.showcase-track {
+  position: relative;
+  width: 100%;
+  height: 340vh;
+  background: #020407;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.showcase-track::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.showcase-sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1400px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.showcase-sticky::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Background Canvas */
+.showcase-canvas-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.showcase-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: contrast(1.1) brightness(0.95);
+}
+
+.showcase-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(2, 4, 7, 0.45) 0%, rgba(2, 4, 7, 0.85) 70%, #020407 100%),
+    linear-gradient(to bottom, rgba(2, 4, 7, 0.7) 0%, transparent 20%, transparent 80%, rgba(2, 4, 7, 0.9) 100%);
+  pointer-events: none;
+}
+
+/* Cyber Grid Lines */
+.showcase-grid-lines {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   MOBILE ONLY: Thin Sidebar Progress Indicator (matches active section color)
+   ========================================================================== */
+.showcase-mobile-sidebar {
+  display: none;
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 45;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+  .showcase-mobile-sidebar {
+    display: flex;
+  }
+}
+
+.showcase-mobile-sidebar-track {
+  width: 3px;
+  height: clamp(140px, 30vh, 220px);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.showcase-mobile-sidebar-fill {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-radius: 999px;
+  transition: height 0.15s ease-out, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.showcase-mobile-sidebar-val {
+  font-family: var(--mono, monospace);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  transition: color 0.3s ease;
+  text-shadow: 0 0 8px currentColor;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   TABLET ONLY: Left-side Vertical Rail
+   ========================================================================== */
+.showcase-tab-left-rail {
+  display: none;
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 35;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+
+.showcase-tab-rail-track {
+  width: 2px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.showcase-tab-rail-progress {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  transition: height 0.18s ease-out, background-color 0.3s ease;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.showcase-tab-rail-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.showcase-tab-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(8, 14, 24, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.showcase-tab-pill:hover,
+.showcase-tab-pill.is-active {
+  border-color: rgba(0, 229, 255, 0.45);
+  color: #f8fafc;
+  background: rgba(0, 229, 255, 0.1);
+}
+
+.showcase-tab-pill.is-active .tab-pill-dot {
+  background: #00e5ff;
+  box-shadow: 0 0 6px #00e5ff;
+}
+
+.tab-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+/* ==========================================================================
+   Centered SloshGauge
+   ========================================================================== */
+.showcase-gauge-center {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.showcase-slosh-gauge {
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.75),
+    0 0 40px rgba(0, 229, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: box-shadow 0.3s ease;
+}
+
+/* ==========================================================================
+   Main Interactive Stage Container
+   ========================================================================== */
+.showcase-stage-layout {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1440px;
+  height: 100%;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) auto minmax(320px, 1fr);
+  grid-template-rows: 1fr;
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.showcase-stage-layout::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@media (max-width: 1024px) {
+  .showcase-stage-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    justify-items: center;
+    padding-top: 5rem;
+    padding-bottom: 3.5rem;
+    gap: 1.25rem;
+    padding-left: clamp(1rem, 6vw, 4.5rem);
+  }
+}
+
+.showcase-tab-rail-track {
+  width: 3px;
+  height: clamp(220px, 42vh, 360px);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+
+
+@media (max-width: 1024px) {
+  .showcase-reactor-col {
+    display: none !important;
+  }
+  .showcase-reactor-housing {
+    display: none !important;
+  }
+}
+
+
+.showcase-reactor-housing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.35rem 1.15rem;
+  background: rgba(8, 14, 24, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 26px;
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    0 0 35px rgba(255, 18, 56, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.showcase-reactor-housing:hover {
+  border-color: rgba(255, 18, 56, 0.4);
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    0 0 50px rgba(255, 18, 56, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.showcase-reactor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.showcase-reactor-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #ff1238;
+  font-weight: 600;
+}
+
+.showcase-reactor-tag::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff1238;
+  box-shadow: 0 0 8px #ff1238;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.showcase-reactor-footer {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.showcase-reactor-stage-badge {
+  padding: 0.18rem 0.55rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* Nav Pager below Reactor */
+.showcase-pager {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.4rem;
+}
+
+@media (max-width: 640px) {
+  .showcase-reactor-housing {
+    padding: 0.85rem 0.75rem;
+    border-radius: 18px;
+  }
+  .showcase-reactor-header {
+    margin-bottom: 0.4rem;
+  }
+  .showcase-pager {
+    margin-top: 0.6rem;
+  }
+}
+
+.showcase-pager-btn {
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.showcase-pager-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.showcase-pager-btn.is-active {
+  background: rgba(255, 18, 56, 0.15);
+  border-color: #ff1238;
+  color: #ff1238;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(255, 18, 56, 0.3);
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .showcase-tab-left-rail {
+    display: flex !important;
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 35;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+/* ==========================================================================
+   Smooth Threshold-Based Stage Cards
+   Transitions shrink into central loading bar and expand out smoothly!
+   ========================================================================== */
+/* ==========================================================================
+   Smooth Threshold-Based Stage Cards
+   Transitions emerge cleanly from the central SloshGauge outward
+   ========================================================================== */
+.showcase-stage-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.showcase-split-stage { display: contents; }
+.showcase-stage-title { margin: .6rem 0; color: #fff; font-family: var(--display, sans-serif); font-size: clamp(1.65rem, 3vw, 2.4rem); line-height: 1.05; }
+.showcase-stage-copy { margin: 0; color: #cbd5e1; font-size: .94rem; line-height: 1.65; }
+.showcase-advance { display: inline-flex; align-items: center; gap: .55rem; margin-top: 1.35rem; border: 0; background: transparent; color: #67e8f9; font-family: var(--mono, monospace); font-size: .7rem; letter-spacing: .1em; text-decoration: none; cursor: pointer; }
+.showcase-advance:hover { color: #fff; }
+
+/* Left Orbit Stage (About & Sponsors-Left): Emerges from SloshGauge toward the left */
+.showcase-stage-card--about,
+.showcase-stage-card--sponsors-left,
+.showcase-stage-card--left {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  transform-origin: right center;
+}
+
+.showcase-stage-card--about.is-inactive,
+.showcase-stage-card--sponsors-left.is-inactive,
+.showcase-stage-card--left.is-inactive {
+  opacity: 0;
+  transform: translateX(90px) scale(0.68);
+  pointer-events: none;
+}
+
+.showcase-stage-card--about.is-active,
+.showcase-stage-card--sponsors-left.is-active,
+.showcase-stage-card--left.is-active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Right Orbit Stage (Domains & Sponsors-Right): Emerges from SloshGauge toward the right */
+.showcase-stage-card--domains,
+.showcase-stage-card--sponsors-right,
+.showcase-stage-card--right {
+  grid-column: 3 / 4;
+  grid-row: 1 / 2;
+  transform-origin: left center;
+}
+
+.showcase-stage-card--domains.is-inactive,
+.showcase-stage-card--sponsors-right.is-inactive,
+.showcase-stage-card--right.is-inactive {
+  opacity: 0;
+  transform: translateX(-90px) scale(0.68);
+  pointer-events: none;
+}
+
+.showcase-stage-card--domains.is-active,
+.showcase-stage-card--sponsors-right.is-active,
+.showcase-stage-card--right.is-active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
+@media (max-width: 1024px) {
+  .showcase-stage-card {
+    grid-column: 1 / 2 !important;
+    grid-row: 2 / 3 !important;
+    max-width: 620px;
+    margin: 0 auto;
+    transform-origin: center top !important;
+  }
+
+  .showcase-stage-card--about.is-inactive,
+  .showcase-stage-card--domains.is-inactive,
+  .showcase-stage-card--sponsors-left.is-inactive,
+  .showcase-stage-card--sponsors-right.is-inactive {
+    transform: translateY(-35px) scale(0.85) !important;
+    opacity: 0 !important;
+  }
+
+  .showcase-stage-card--about.is-active,
+  .showcase-stage-card--domains.is-active,
+  .showcase-stage-card--sponsors-left.is-active,
+  .showcase-stage-card--sponsors-right.is-active {
+    transform: translateY(0) scale(1) !important;
+    opacity: 1 !important;
+  }
+
+  .showcase-stage-card--sponsors-right {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .showcase-gauge-center {
+    display: none !important;
+  }
+
+  .showcase-stage-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 4.8rem 1.6rem 2.2rem 1.2rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 0 !important;
+  }
+
+  .showcase-stage-card {
+    grid-column: unset !important;
+    grid-row: unset !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .showcase-stage-card.is-inactive {
+    display: none !important;
+  }
+
+  .showcase-stage-card.is-active {
+    display: flex !important;
+    position: relative !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .showcase-glass-panel {
+    padding: 1.25rem 1.15rem !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* Card Surface Styling */
+.showcase-glass-panel {
+  background: rgba(9, 14, 22, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: clamp(1.2rem, 3vw, 2.2rem);
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.showcase-glass-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 119, 255, 0.7), transparent);
+}
+
+.showcase-glass-panel--blue::after {
+  background: linear-gradient(90deg, transparent, rgba(0, 119, 255, 0.9), transparent);
+}
+
+.showcase-glass-panel--white::after {
+  background: linear-gradient(90deg, transparent, rgba(245, 245, 245, 0.9), transparent);
+}
+
+.showcase-glass-panel--orange::after,
+.showcase-glass-panel--copper::after {
+  background: linear-gradient(90deg, transparent, rgba(234, 88, 12, 0.9), transparent);
+}
+
+.showcase-glass-panel--gold::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 184, 0, 0.8), transparent);
+}
+
+.showcase-glass-panel--cyan::after {
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.8), transparent);
+}
+
+/* Domain Mini-Grid inside Showcase */
+.showcase-domains-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 580px) {
+  .showcase-domains-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.showcase-domain-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  transition: all 0.25s ease;
+}
+
+.showcase-domain-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(0, 229, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.showcase-domain-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.showcase-domain-header svg {
+  color: #00e5ff;
+}
+
+.showcase-domain-code {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.showcase-domain-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.2rem 0;
+}
+
+.showcase-domain-desc {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* Sponsor Tiers in Showcase */
+.showcase-sponsor-tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 1rem 0;
+}
+
+.showcase-tier-pill {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(255, 184, 0, 0.08);
+  border: 1px solid rgba(255, 184, 0, 0.25);
+  color: #ffb800;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.showcase-tier-pill::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffb800;
+  box-shadow: 0 0 6px #ffb800;
+}
+
+/* Anchor positioning points for direct URL hash jump */
+.showcase-anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+}

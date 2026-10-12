@@ -1,0 +1,1 @@
+export { default, DefaultLayout, Layout } from '../layout.jsx';

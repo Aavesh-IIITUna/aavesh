@@ -1,0 +1,19 @@
+.aavesh-showcase-section {
+  position: relative;
+  background-color: #080D18;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.showcase-board-card {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(104, 169, 255, 0.1);
+}
+
+.interactive-pad {
+  cursor: pointer;
+  user-select: none;
+}
+
+.interactive-pad:hover {
+  box-shadow: 0 0 15px rgba(104, 169, 255, 0.25);
+}
