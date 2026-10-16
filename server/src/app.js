@@ -3,16 +3,17 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import routes from './routes/index.js';
+import { createApiRouter } from './routes/index.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 import { env } from './config/env.js';
 
-export function createApp() {
+export function createApp({ database } = {}) {
   const app = express();
 
   app.use(helmet());
   app.use(
     cors({
+      credentials: true,
       origin(origin, callback) {
         if (!origin || env.clientOrigins.includes(origin)) return callback(null, true);
         return callback(new Error(`Origin ${origin} not allowed by CORS`));
@@ -37,7 +38,7 @@ export function createApp() {
     res.json({ status: 'ok', env: env.nodeEnv, uptime: process.uptime() });
   });
 
-  app.use('/api', routes);
+  app.use('/api', createApiRouter(database));
 
   app.use(notFound);
   app.use(errorHandler);

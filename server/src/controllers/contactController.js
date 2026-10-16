@@ -8,7 +8,7 @@ export const createMessage = asyncHandler(async (req, res) => {
   res.status(201).json({ id: created._id, received: true });
 });
 
-// GET /api/contact (admin-less listing, useful for triage during development)
+// GET /api/contact (permission-protected inbox listing)
 export const listMessages = asyncHandler(async (req, res) => {
   const messages = await ContactMessage.find().sort({ createdAt: -1 }).limit(50).lean();
   res.json(messages);
