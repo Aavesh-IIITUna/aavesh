@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 dotenv.config({ path: fileURLToPath(new URL('../../.env', import.meta.url)) });
 
 const DEVELOPMENT_DATABASE = 'aavesh_prisma_dev';
+const CLAIM_COLLECTION = 'developerprovisioningclaims';
+const CLAIM_ID = 'first-developer';
 
 export const normalizeEmail = (value) => {
   if (typeof value !== 'string') throw new Error('Provide an account email with --email.');
@@ -29,17 +31,53 @@ export const assertDevelopmentDatabase = (databaseUrl) => {
   }
 };
 
-export const provisionFirstDeveloper = async (db, email) => db.$transaction(async (tx) => {
-  const user = await tx.user.findUnique({ where: { email } });
+const acquireDeveloperClaim = async (db, userId) => {
+  const command = {
+    findAndModify: CLAIM_COLLECTION,
+    query: { _id: CLAIM_ID },
+    update: { $setOnInsert: { ownerUserId: userId } },
+    upsert: true,
+    new: true,
+  };
+  let result;
+  try {
+    result = await db.$runCommandRaw(command);
+  } catch {
+    // Concurrent upserts on the fixed _id may report a duplicate-key race.
+    // Retry against the now-existing document; $setOnInsert will leave it intact.
+    result = await db.$runCommandRaw(command);
+  }
+
+  const claim = result?.value;
+  if (claim?.ownerUserId === userId) return;
+  if (claim) throw new Error('First Developer provisioning is already claimed by another account.');
+  throw new Error('Could not acquire the first Developer provisioning claim. No account was changed.');
+};
+
+export const provisionFirstDeveloper = async (db, email) => {
+  const user = await db.user.findUnique({ where: { email } });
   if (!user) throw new Error('No registered account matches that email. Register the account first.');
   if (user.status !== 'ACTIVE') throw new Error('The account is not active; no changes were made.');
 
-  const existingDeveloper = await tx.user.findFirst({ where: { roleKeys: { has: 'developer' } }, select: { id: true } });
+  const existingDeveloper = await db.user.findFirst({ where: { roleKeys: { has: 'developer' } }, select: { id: true } });
   if (existingDeveloper) throw new Error('A Developer account is already provisioned; no changes were made.');
 
-  const roleKeys = [...new Set([...(user.roleKeys ?? []), 'developer'])];
-  return tx.user.update({ where: { id: user.id }, data: { roleKeys } });
-});
+  // MongoDB's built-in unique _id index makes this insert an atomic singleton
+  // claim. It intentionally sits outside a Prisma transaction: a successful
+  // claim remains recoverable by this same account if the process exits before
+  // promotion, and another account can never acquire a second claim.
+  await acquireDeveloperClaim(db, user.id);
+
+  const currentUser = await db.user.findUnique({ where: { email } });
+  if (!currentUser || currentUser.id !== user.id) throw new Error('The account changed while provisioning; no promotion was made.');
+  if (currentUser.status !== 'ACTIVE') throw new Error('The account is not active; no changes were made.');
+
+  const developerAfterClaim = await db.user.findFirst({ where: { roleKeys: { has: 'developer' } }, select: { id: true } });
+  if (developerAfterClaim) throw new Error('A Developer account is already provisioned; no changes were made.');
+
+  const roleKeys = [...new Set([...(currentUser.roleKeys ?? []), 'developer'])];
+  return db.user.update({ where: { id: currentUser.id }, data: { roleKeys } });
+};
 
 const main = async () => {
   const emailArgIndex = process.argv.indexOf('--email');
@@ -76,7 +114,10 @@ if (import.meta.url === invokedPath) {
       'Run this command in an interactive terminal; confirmation is required.',
       'No registered account matches that email. Register the account first.',
       'The account is not active; no changes were made.',
+      'The account changed while provisioning; no promotion was made.',
       'A Developer account is already provisioned; no changes were made.',
+      'First Developer provisioning is already claimed by another account.',
+      'Could not acquire the first Developer provisioning claim. No account was changed.',
       'Confirmation did not match; no changes were made.',
     ]);
     stdout.write(`${safeMessages.has(error.message) ? error.message : 'Provisioning failed; details were withheld to protect connection credentials.'}\n`);
