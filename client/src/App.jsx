@@ -22,6 +22,7 @@ import InfiniteMenu from "./components/InfiniteMenu"
 import TriangleGallery from "./components/TriangleGallery"
 import { galleryCollections } from "./data/siteData"
 import { useSociety } from "./hooks/useSociety"
+import { useAuth } from "./hooks/useAuth"
 import { api, ApiRequestError } from "./lib/api"
 import Hero from "./pages/Hero"
 import ScrollShowcase from "./pages/ScrollShowcase"
@@ -104,32 +105,7 @@ const fallbackDomainIcons = {
   "04": Bot,
 }
 
-const defaultDomains = [
-  {
-    icon: CircuitBoard,
-    title: "VLSI & Microelectronics",
-    copy: "ASIC flow, RTL synthesis, tapeouts, and physical circuit fundamentals that turn silicon concepts into working hardware.",
-    code: "HW.01",
-  },
-  {
-    icon: Cpu,
-    title: "Embedded Systems & IoT",
-    copy: "Microcontrollers, RTOS firmware, sensor nodes, and low-power connected edge hardware for real-world telemetry.",
-    code: "EM.02",
-  },
-  {
-    icon: Radio,
-    title: "Signal Processing & RF Systems",
-    copy: "SDR transceiver design, DSP algorithms, antenna arrays, and high-frequency communication protocols.",
-    code: "RF.03",
-  },
-  {
-    icon: Bot,
-    title: "Robotics & Autonomous Nodes",
-    copy: "Integrated mechanical, motor control, LiDAR slam, and intelligent computer vision for autonomous navigation.",
-    code: "RB.04",
-  },
-]
+
 
 function About({ society }) {
   return (
@@ -176,18 +152,16 @@ function About({ society }) {
 }
 
 function Domains({ tracks }) {
-  const displayDomains = (tracks && tracks.length > 0)
-    ? tracks.map((track, i) => {
+  const displayDomains = (tracks || []).map((track, i) => {
         const codeNum = track.code || String(i + 1).padStart(2, "0")
         const Icon = fallbackDomainIcons[codeNum] || (i === 0 ? CircuitBoard : i === 1 ? Cpu : i === 2 ? Radio : Bot)
         return {
           code: `TRK.${codeNum}`,
           title: track.title,
-          copy: track.description || defaultDomains[i % defaultDomains.length].copy,
+          copy: track.description || "Track details will be announced soon.",
           icon: Icon,
         }
       })
-    : defaultDomains
 
   return (
     <section
@@ -311,7 +285,47 @@ function Projects({ projects, live }) {
   )
 }
 
+function formatEventDate(value) {
+  if (!value) return "Date to be announced"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Date to be announced"
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date)
+}
+
 function Events() {
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [retry, setRetry] = useState(0)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setLoading(true)
+    setError("")
+
+    api.listEvents({ signal: controller.signal })
+      .then((result) => {
+        if (!Array.isArray(result)) throw new Error("The events response was not a list.")
+        setEvents(result)
+      })
+      .catch((requestError) => {
+        if (requestError.name !== "AbortError") {
+          setError("Events could not be loaded. Please try again.")
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [retry])
+
+  useEffect(() => {
+    const refreshEvents = () => setRetry((value) => value + 1)
+    window.addEventListener("aavesh:events-updated", refreshEvents)
+    return () => window.removeEventListener("aavesh:events-updated", refreshEvents)
+  }, [])
+
   return (
     <section
       aria-labelledby="events-title"
@@ -332,66 +346,73 @@ function Events() {
           }
         />
 
-        <div className="events-grid">
-          <article className="event-feature" data-reveal>
-            <ImageWithCredit
-              alt="Engineering students collaborating in a workshop"
-              credit="AAVESH Hands-On Lab · IIIT Una"
-              src="/images/workshop.jpg"
-            />
-            <div className="event-feature__body">
-              <ContentBadge>Semester 2026/27</ContentBadge>
-              <Heading as="h3">Hardware & Silicon Workshop Series</Heading>
-              <div className="event-meta">
-                <span>
-                  <CalendarDays aria-hidden="true" size={16} />
-                  Announced each semester
-                </span>
-                <span>
-                  <MapPin aria-hidden="true" size={16} />
-                  Saloh Campus, IIIT Una
-                </span>
-              </div>
-              <p>
-                From schematic capture in KiCad to embedded C firmware and FPGA synthesis—join our interactive student bootcamps.
-              </p>
-              <ButtonLink href="#contact" variant="secondary">
-                Inquire about events
-                <ArrowRight aria-hidden="true" size={16} />
-              </ButtonLink>
-            </div>
-          </article>
-
-          <div className="event-stack">
-            {[
-              {
-                icon: CircuitBoard,
-                label: "PCB Design Sprints",
-                copy: "Schematic design, DRC routing, and surface mount soldering",
-              },
-              {
-                icon: Code2,
-                label: "Embedded Hackathons",
-                copy: "48-hour hardware-software integration challenges",
-              },
-              {
-                icon: Radio,
-                label: "RF & Signal Labs",
-                copy: "Software-defined radio and spectrum sensing demos",
-              },
-            ].map(({ copy, icon: Icon, label }) => (
-              <article className="event-mini" data-reveal key={label}>
-                <Icon aria-hidden="true" />
-                <div>
-                  <ContentBadge>Curriculum Track</ContentBadge>
-                  <Heading as="h3">{label}</Heading>
-                  <p>{copy}</p>
-                </div>
-                <ChevronRight aria-hidden="true" size={18} />
-              </article>
-            ))}
+        {loading ? (
+          <div className="content-notice" role="status">
+            <ContentBadge>Loading</ContentBadge>
+            <p>Loading upcoming events...</p>
           </div>
-        </div>
+        ) : error ? (
+          <div className="content-notice" role="alert">
+            <ContentBadge>Unavailable</ContentBadge>
+            <p>{error}</p>
+            <button className="button button--secondary" onClick={() => setRetry((value) => value + 1)} type="button">
+              Try again
+            </button>
+          </div>
+        ) : events.length === 0 ? (
+          <div className="content-notice" role="status">
+            <ContentBadge>No events</ContentBadge>
+            <p>There are no upcoming events right now. Please check back soon.</p>
+          </div>
+        ) : (
+          <div className="events-grid">
+            <article className="event-feature" data-reveal style={events.length === 1 ? { gridColumn: "1 / -1" } : undefined}>
+              <ImageWithCredit
+                alt="Engineering students collaborating in a workshop"
+                credit="AAVESH Hands-On Lab"
+                src="/images/workshop.jpg"
+              />
+              <div className="event-feature__body">
+                <ContentBadge>{events[0].status || "Upcoming event"}</ContentBadge>
+                <Heading as="h3">{events[0].title}</Heading>
+                <div className="event-meta">
+                  <span>
+                    <CalendarDays aria-hidden="true" size={16} />
+                    {formatEventDate(events[0].startsAt)}
+                  </span>
+                  <span>
+                    <MapPin aria-hidden="true" size={16} />
+                    {events[0].location || "Location to be announced"}
+                  </span>
+                </div>
+                <p>{events[0].description || "More details will be announced soon."}</p>
+                <ButtonLink href="#contact" variant="secondary">
+                  Inquire about events
+                  <ArrowRight aria-hidden="true" size={16} />
+                </ButtonLink>
+              </div>
+            </article>
+
+            {events.length > 1 && (
+              <div className="event-stack">
+                {events.slice(1).map((event, index) => {
+                  const Icon = [CircuitBoard, Code2, Radio][index % 3]
+                  return (
+                    <article className="event-mini" data-reveal key={event._id || event.id || index}>
+                      <Icon aria-hidden="true" />
+                      <div>
+                        <ContentBadge>{formatEventDate(event.startsAt)}</ContentBadge>
+                        <Heading as="h3">{event.title}</Heading>
+                        <p>{event.description || event.location || "More details will be announced soon."}</p>
+                      </div>
+                      <ChevronRight aria-hidden="true" size={18} />
+                    </article>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   )
@@ -450,34 +471,11 @@ function Gallery() {
 }
 
 function Team({ members }) {
-  const teamMenuItems = members && members.length > 0
-    ? members.map((m, i) => ({
-        image: m.image || (i % 2 === 0 ? "/images/circuit-board.jpg" : "/images/soldering.jpg"),
-        title: m.name,
-        description: `${m.role} · ${m.track || 'Core Division'}`,
-      }))
-    : [
-        {
-          image: "/images/circuit-board.jpg",
-          title: "Faculty Mentorship",
-          description: "Guidance & Institutional Direction · IIIT Una",
-        },
-        {
-          image: "/images/soldering.jpg",
-          title: "VLSI & Hardware Core",
-          description: "RTL, FPGA, and Custom PCB Architecture Teams",
-        },
-        {
-          image: "/images/robotics.jpg",
-          title: "RF & Signal Intelligence",
-          description: "Spectrum sensing, antenna & RF front-end design",
-        },
-        {
-          image: "/images/workshop.jpg",
-          title: "Software & Autonomous Systems",
-          description: "ROS 2, Edge AI, sensor fusion & RTOS pipelines",
-        },
-      ]
+  const teamMenuItems = (members || []).map((m, i) => ({
+    image: m.image || (i % 2 === 0 ? "/images/circuit-board.jpg" : "/images/soldering.jpg"),
+    title: m.name,
+    description: `${m.role || "Member"} - ${m.track || "Department to be announced"}`,
+  }))
 
   return (
     <section
@@ -502,25 +500,32 @@ function Team({ members }) {
         </div>
 
         {/* 3D InfiniteMenu for Members of the Club from React Bits */}
-        <div style={{ height: "520px", position: "relative", width: "100%", borderRadius: "24px", overflow: "hidden" }} data-reveal>
-          <InfiniteMenu
-            accentColor="#00f0ff"
-            autoplay={3.5}
-            count={80}
-            dim={0.2}
-            grayscale={false}
-            inertia={0.65}
-            intro={true}
-            items={teamMenuItems}
-            pullBack={1}
-            roundness={0.25}
-            showInfo={true}
-            stretch={0.6}
-            theme="dark"
-            tileSize={0.65}
-            zoom={1.6}
-          />
-        </div>
+        {teamMenuItems.length ? (
+          <div style={{ height: "520px", position: "relative", width: "100%", borderRadius: "24px", overflow: "hidden" }} data-reveal>
+            <InfiniteMenu
+              accentColor="#00f0ff"
+              autoplay={3.5}
+              count={80}
+              dim={0.2}
+              grayscale={false}
+              inertia={0.65}
+              intro={true}
+              items={teamMenuItems}
+              pullBack={1}
+              roundness={0.25}
+              showInfo={true}
+              stretch={0.6}
+              theme="dark"
+              tileSize={0.65}
+              zoom={1.6}
+            />
+          </div>
+        ) : (
+          <div className="content-notice" data-reveal role="status">
+            <ContentBadge>No members</ContentBadge>
+            <p>The member roster is currently empty.</p>
+          </div>
+        )}
       </div>
     </section>
   )
@@ -729,6 +734,7 @@ function Contact({ society }) {
 
 export default function App() {
   const { society, tracks, projects, members, live } = useSociety()
+  const auth = useAuth()
   const [reverseFlow, setReverseFlow] = useState(false)
   const [introKey, setIntroKey] = useState(0)
   const [forceIntro, setForceIntro] = useState(false)
@@ -833,12 +839,15 @@ export default function App() {
       onToggleReverseFlow={handleToggleReverseFlow}
       reverseFlow={reverseFlow}
       society={society}
+      auth={auth}
     >
       <Hero
         onToggleReverseFlow={handleToggleReverseFlow}
         reverseFlow={reverseFlow}
       />
       <ScrollShowcase />
+      <Domains tracks={tracks} />
+      <Projects live={live} projects={projects} />
       <Events />
       <Gallery />
       <Team members={members} />

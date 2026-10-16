@@ -18,10 +18,26 @@ export const fallbackSociety = {
 };
 
 export const fallbackTracks = [
-  { code: '01', title: 'VLSI & Microelectronics' },
-  { code: '02', title: 'Embedded Systems & IoT' },
-  { code: '03', title: 'Signal Processing & RF Systems' },
-  { code: '04', title: 'Robotics & Autonomous Nodes' },
+  {
+    code: '01',
+    title: 'VLSI & Microelectronics',
+    description: 'ASIC flow, RTL synthesis, tapeouts, and physical circuit fundamentals that turn silicon concepts into working hardware.',
+  },
+  {
+    code: '02',
+    title: 'Embedded Systems & IoT',
+    description: 'Microcontrollers, RTOS firmware, sensor nodes, and low-power connected edge hardware for real-world telemetry.',
+  },
+  {
+    code: '03',
+    title: 'Signal Processing & RF Systems',
+    description: 'SDR transceiver design, DSP algorithms, antenna arrays, and high-frequency communication protocols.',
+  },
+  {
+    code: '04',
+    title: 'Robotics & Autonomous Nodes',
+    description: 'Integrated mechanical, motor control, LiDAR slam, and intelligent computer vision for autonomous navigation.',
+  },
 ];
 
 export const fallbackProjects = [

@@ -194,6 +194,15 @@
   color: #ffffff;
 }
 
+.navbar-account-btn {
+  max-width: 9rem;
+  overflow: hidden;
+  cursor: pointer;
+  font-family: var(--mono, 'Aavesh', sans-serif);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .navbar-toggle-btn {
   display: flex;
   align-items: center;
@@ -265,6 +274,25 @@
     backdrop-filter: blur(52px) saturate(220%);
     -webkit-backdrop-filter: blur(52px) saturate(220%);
     background: rgba(2, 6, 14, 0.94);
+  }
+}
+
+@media (max-width: 520px) {
+  .navbar-container {
+    padding-inline: 1rem;
+  }
+
+  .navbar-actions {
+    gap: 0.45rem;
+  }
+
+  .navbar-contact-btn {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.62rem;
+  }
+
+  .navbar-account-btn {
+    max-width: 7rem;
   }
 }
 

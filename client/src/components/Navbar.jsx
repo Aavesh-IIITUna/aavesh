@@ -1,7 +1,8 @@
 import { Menu, X } from "lucide-react"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import BrandMark from "./BrandMark"
 import GooeyNav from "./GooeyNav"
+import AuthPanel from "./AuthPanel"
 
 const navLinks = [
   { label: "Home", href: "#top" },
@@ -12,8 +13,9 @@ const navLinks = [
   { label: "Sponsors", href: "#sponsors" },
 ]
 
-export default function Navbar() {
+export default function Navbar({ auth }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [activeId, setActiveId] = useState("top")
   const [indicatorStyle, setIndicatorStyle] = useState({
@@ -24,6 +26,7 @@ export default function Navbar() {
   const navLinksRef = useRef([])
   const isClickScrollingRef = useRef(false)
   const scrollTimeoutRef = useRef(null)
+  const closeAccountPanel = useCallback(() => setAccountOpen(false), [])
 
   // Track active section and header scrolled styling dynamically
   useEffect(() => {
@@ -220,6 +223,16 @@ export default function Navbar() {
           </a>
 
           <button
+            aria-expanded={accountOpen}
+            aria-label={auth.user ? `Account for ${auth.user.displayName}` : "Log in or register"}
+            className="navbar-contact-btn navbar-account-btn"
+            onClick={() => setAccountOpen(true)}
+            type="button"
+          >
+            {auth.loading ? "Checking..." : auth.user?.displayName || "Account"}
+          </button>
+
+          <button
             aria-expanded={menuOpen}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             className="navbar-toggle-btn"
@@ -263,6 +276,7 @@ export default function Navbar() {
           </nav>
         </div>
       </div>
+      {accountOpen && <AuthPanel auth={auth} onClose={closeAccountPanel} />}
     </header>
   )
 }

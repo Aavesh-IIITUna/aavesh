@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Collection names and stored field names match the existing Mongoose models.
+// Optional timestamps/version fields allow Prisma to read legacy documents that
+// may predate Mongoose's automatic timestamp or version-key fields.
+model Society {
+  id            String             @id @default(auto()) @map("_id") @db.ObjectId
+  key           String?            @unique @default("aavesh")
+  name          String
+  shortName     String?
+  
+  tagline       String?
+  mission       String
+  email         String?
+  institute     String?
+  instituteUrl  String?
+  accreditation String?
+  location      SocietyLocation?
+  socials       SocietySocials?
+  metrics       SocietyMetrics?
+  tracks        SocietyTrack[]
+  subDomains    SocietySubDomains?
+  createdAt     DateTime?
+  updatedAt     DateTime?
+  version       Int?               @map("__v")
+
+  @@map("societies")
+}
+
+type SocietyLocation {
+  sector       String?
+  addressLine  String?
+  pincode      String?
+  lat          Float?
+  lng          Float?
+}
+
+type SocietySocials {
+  github    String?
+  linkedin  String?
+  discord   String?
+  instagram String?
+}
+
+type SocietyMetrics {
+  clockRate   String? @default("50.000 Hz")
+  facility    String? @default("Saloh Campus")
+  institution String? @default("IIIT Una")
+  council     String? @default("Student Gymkhana")
+}
+
+type SocietyTrack {
+  code        String
+  title       String
+  description String @default("")
+  order       Int    @default(0)
+}
+
+type SocietySubDomains {
+  code  String? @default("01")
+  title String? @default("VLSI & Silicon")
+  note  String? @default("")
+}
+
+model Project {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String        @unique
+  title     String
+  summary   String?
+  track     String?
+  status    ProjectStatus @default(active)
+  repoUrl   String?
+  tags      String[]      @default([])
+  createdAt DateTime?
+  updatedAt DateTime?
+  version   Int?          @map("__v")
+
+  @@map("projects")
+}
+
+enum ProjectStatus {
+  active
+  archived
+  prototype
+}
+
+model Member {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  role      String?
+  track     String?
+  email     String?
+  github    String?
+  linkedin  String?
+  joinedYear Int?
+  active    Boolean  @default(true)
+  createdAt DateTime?
+  updatedAt DateTime?
+  version   Int?     @map("__v")
+
+  @@map("members")
+}
+
+model ContactMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  subject   String   @default("General")
+  message   String
+  handled   Boolean  @default(false)
+  createdAt DateTime?
+  updatedAt DateTime?
+  version   Int?     @map("__v")
+
+  @@map("contactmessages")
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+// Roles are configurable by trusted administration code added in a later stage.
+model Role {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  key         String   @unique
+  name        String
+  permissions String[] @default([])
+  system      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model User {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  email        String     @unique
+  passwordHash String
+  displayName  String
+  profileImageUrl String?
+  status       UserStatus @default(ACTIVE)
+  roleKeys     String[]   @default(["member"])
+  permissions  String[]   @default([])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("users")
+}
+
+model AuthSession {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  tokenHash String   @unique
+  userId    String   @db.ObjectId
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("authsessions")
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+model Event {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  location    String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  status      EventStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  version     Int         @default(0) @map("__v")
+
+  @@index([status, startsAt])
+  @@map("events")
+}
