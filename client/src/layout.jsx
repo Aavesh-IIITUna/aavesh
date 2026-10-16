@@ -13,6 +13,7 @@ import ScrollHUD from "./components/ScrollHUD"
 export default function DefaultLayout({
   children,
   society,
+  auth,
   reverseFlow = false,
   onToggleReverseFlow,
   onReplayIntro,
@@ -45,7 +46,7 @@ export default function DefaultLayout({
       </a>
 
       {/* Global Responsive Navigation Header */}
-      <Navbar />
+      <Navbar auth={auth} />
 
       {/* Main Content Viewport */}
       <main className="flex-1 w-full" id="main">

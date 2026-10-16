@@ -2,12 +2,22 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { fallbackMembers, fallbackProjects, fallbackSociety, fallbackTracks } from '../data/content.js';
 
+const loadResource = async (request, fallback, isValid) => {
+  try {
+    const value = await request;
+    if (!isValid(value)) throw new Error('Unexpected API response shape');
+    return { value, live: true };
+  } catch {
+    return { value: fallback, live: false };
+  }
+};
+
 export function useSociety() {
   const [state, setState] = useState({
-    society: fallbackSociety,
-    tracks: fallbackTracks,
-    projects: fallbackProjects,
-    members: fallbackMembers,
+    society: null,
+    tracks: [],
+    projects: [],
+    members: [],
     live: false,
     loading: true,
     error: null,
@@ -17,35 +27,39 @@ export function useSociety() {
     const controller = new AbortController();
     const { signal } = controller;
 
+    const refreshMembers = async () => {
+      const result = await loadResource(api.listMembers({ signal }), fallbackMembers, Array.isArray);
+      if (signal.aborted) return;
+      setState((current) => ({ ...current, members: result.value, live: current.live || result.live }));
+    };
+    window.addEventListener('aavesh:members-updated', refreshMembers);
+
     async function load() {
-      try {
-        const [society, tracks, projects, members] = await Promise.all([
-          api.getSociety({ signal }).catch(() => null),
-          api.getTracks({ signal }).catch(() => null),
-          api.listProjects({ signal }).catch(() => null),
-          api.listMembers({ signal }).catch(() => null),
-        ]);
+      const [society, tracks, projects, members] = await Promise.all([
+        loadResource(api.getSociety({ signal }), fallbackSociety, (value) => value !== null && typeof value === 'object' && !Array.isArray(value)),
+        loadResource(api.getTracks({ signal }), fallbackTracks, Array.isArray),
+        loadResource(api.listProjects({ signal }), fallbackProjects, Array.isArray),
+        loadResource(api.listMembers({ signal }), fallbackMembers, Array.isArray),
+      ]);
 
-        if (signal.aborted) return;
+      if (signal.aborted) return;
 
-        setState((prev) => ({
-          ...prev,
-          society: society ?? prev.society,
-          tracks: tracks?.length ? tracks : prev.tracks,
-          projects: projects?.length ? projects : prev.projects,
-          members: members?.length ? members : prev.members,
-          live: Boolean(society || tracks || projects || members),
-          loading: false,
-          error: null,
-        }));
-      } catch (err) {
-        if (signal.aborted) return;
-        setState((prev) => ({ ...prev, loading: false, error: err.message }));
-      }
+      setState({
+        society: society.value,
+        tracks: tracks.value,
+        projects: projects.value,
+        members: members.value,
+        live: society.live || tracks.live || projects.live || members.live,
+        loading: false,
+        error: null,
+      });
     }
 
     load();
-    return () => controller.abort();
+    return () => {
+      window.removeEventListener('aavesh:members-updated', refreshMembers);
+      controller.abort();
+    };
   }, []);
 
   return state;
